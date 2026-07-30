@@ -1,4 +1,4 @@
-BOT_TOKEN = "ВАШ_ТОКЕН_ОТ_BOTFATHER"
+BOT_TOKEN = "8905023186:AAG0WbnZYwUel5sGxI3XDotWoaeiMJsyZoU"
 
 # Ссылки на донат
 DONATE_LINK = "https://t.me/ваш_канал"  # Ссылка на Boosty/Donate
