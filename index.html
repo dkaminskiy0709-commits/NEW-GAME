@@ -1,917 +1,121 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏕️ Лагерь Звёздный</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест детей</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            user-select: none;
-        }
-
-        #app {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        /* Верхняя панель */
-        #topPanel {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(10px);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-shop {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            width: 44px;
-            height: 44px;
-            font-size: 22px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-shop:active {
-            transform: scale(0.9);
-        }
-
-        #stats {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 6px 14px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            backdrop-filter: blur(5px);
-        }
-
-        .stat-item .icon {
-            font-size: 18px;
-        }
-
-        /* Кнопка сброса */
-        .btn-reset {
-            background: rgba(255, 71, 87, 0.3);
-            border: 2px solid rgba(255, 71, 87, 0.5);
-            border-radius: 50%;
-            width: 36px;
-            height: 36px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            margin-left: 8px;
-        }
-
-        .btn-reset:active {
-            transform: scale(0.9);
-        }
-
-        /* Игровое поле */
-        #gameCanvas {
+        * { margin: 0; padding: 0; }
+        canvas {
             display: block;
             width: 100vw;
             height: 100vh;
             background: radial-gradient(ellipse at center, #87CEEB 0%, #4A90D9 100%);
-            cursor: pointer;
-            touch-action: none;
-        }
-
-        /* Модальное окно */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .modal.hidden {
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 20px;
-            max-width: 400px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .modal-header h2 {
-            font-size: 22px;
-            color: #333;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 28px;
-            color: #999;
-            cursor: pointer;
-            padding: 0 8px;
-        }
-
-        .close-btn:active {
-            color: #333;
-        }
-
-        .balance {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            padding: 12px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .upgrade-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .upgrade-item {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 2px solid #e9ecef;
-            transition: border-color 0.2s;
-        }
-
-        .upgrade-item:active {
-            transform: scale(0.98);
-        }
-
-        .upgrade-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex: 1;
-        }
-
-        .upgrade-icon {
-            font-size: 28px;
-        }
-
-        .upgrade-title {
-            font-weight: bold;
-            font-size: 15px;
-            color: #333;
-        }
-
-        .upgrade-desc {
-            font-size: 13px;
-            color: #666;
-            margin-top: 2px;
-        }
-
-        .buy-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: transform 0.2s, opacity 0.2s;
-        }
-
-        .buy-btn:active {
-            transform: scale(0.95);
-        }
-
-        .buy-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .buy-btn .cost {
-            color: #FFD700;
-        }
-
-        .reset-section {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 2px solid #e9ecef;
-            text-align: center;
-        }
-
-        .btn-reset-data {
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s, opacity 0.2s;
-        }
-
-        .btn-reset-data:active {
-            transform: scale(0.95);
-        }
-
-        /* Уведомление */
-        .notification {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            backdrop-filter: blur(10px);
-            z-index: 50;
-            animation: slideDown 0.5s ease;
-            text-align: center;
-            max-width: 80%;
-            pointer-events: none;
-        }
-
-        .notification.hidden {
-            display: none;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        /* Эффект ловли */
-        .catch-effect {
-            position: fixed;
-            pointer-events: none;
-            z-index: 20;
-            animation: popEffect 0.6s ease forwards;
-        }
-
-        @keyframes popEffect {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
-
-        /* Мобильная адаптация */
-        @media (max-width: 480px) {
-            .stat-item {
-                font-size: 14px;
-                padding: 4px 10px;
-            }
-            .btn-shop {
-                width: 36px;
-                height: 36px;
-                font-size: 18px;
-            }
-            .btn-reset {
-                width: 30px;
-                height: 30px;
-                font-size: 14px;
-            }
-            .modal-content {
-                padding: 16px;
-            }
-            .upgrade-item {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-            .buy-btn {
-                width: 100%;
-            }
         }
     </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Верхняя панель -->
-        <div id="topPanel">
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="shopBtn" class="btn-shop">🛒</button>
-                <button id="resetBtn" class="btn-reset">🗑️</button>
-            </div>
-            <div id="stats">
-                <div class="stat-item">
-                    <span class="icon">🏆</span>
-                    <span id="score">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="icon">⭐</span>
-                    <span id="azotiki">0</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Игровое поле -->
-        <canvas id="gameCanvas"></canvas>
-
-        <!-- Магазин -->
-        <div id="shopModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>🏪 Магазин улучшений</h2>
-                    <button id="closeShop" class="close-btn">✕</button>
-                </div>
-                
-                <div class="balance">
-                    ⭐ Баланс: <span id="shopAzotiki">91929129912</span>
-                </div>
-
-                <div class="upgrade-list">
-                    <div class="upgrade-item">
-                        <div class="upgrade-info">
-                            <span class="upgrade-icon">📏</span>
-                            <div>
-                                <div class="upgrade-title">Увеличение радиуса</div>
-                                <div class="upgrade-desc">Текущий: <span id="radiusLevel">30</span>px</div>
-                            </div>
-                        </div>
-                        <button class="buy-btn" id="buyRadius">
-                            Купить за <span class="cost">50</span> ⭐
-                        </button>
-                    </div>
-
-                    <div class="upgrade-item">
-                        <div class="upgrade-info">
-                            <span class="upgrade-icon">👨‍👩‍👧</span>
-                            <div>
-                                <div class="upgrade-title">Больше детей</div>
-                                <div class="upgrade-desc">Текущий: <span id="childrenLevel">5</span></div>
-                            </div>
-                        </div>
-                        <button class="buy-btn" id="buyChildren">
-                            Купить за <span class="cost">80</span> ⭐
-                        </button>
-                    </div>
-
-                    <div class="upgrade-item">
-                        <div class="upgrade-info">
-                            <span class="upgrade-icon">⚡</span>
-                            <div>
-                                <div class="upgrade-title">Скорость детей</div>
-                                <div class="upgrade-desc">Текущий: <span id="speedLevel">1</span></div>
-                            </div>
-                        </div>
-                        <button class="buy-btn" id="buySpeed">
-                            Купить за <span class="cost">60</span> ⭐
-                        </button>
-                    </div>
-                </div>
-
-                <div class="reset-section">
-                    <button id="resetProgressBtn" class="btn-reset-data">🗑️ Сбросить весь прогресс</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Уведомление -->
-        <div id="notification" class="notification hidden"></div>
-    </div>
-
-    <!-- Подключаем Telegram WebApp -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
+    <canvas id="gameCanvas"></canvas>
     <script>
-        // --- Telegram WebApp инициализация ---
-        let tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.expand();
-            tg.enableClosingConfirmation();
-        }
-
-        // =====================================================
-        // ===== СИСТЕМА СОХРАНЕНИЯ ПРОГРЕССА =====
-        // =====================================================
-        const SAVE_KEY = 'campGameSave';
-
-        function saveGame() {
-            try {
-                const saveData = {
-                    score: score,
-                    azotiki: azotiki,
-                    catchRadius: catchRadius,
-                    maxChildren: maxChildren,
-                    speedLevel: speedLevel,
-                    costs: costs,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-                console.log('💾 Игра сохранена! ⭐ Азотиков:', azotiki);
-            } catch (e) {
-                console.warn('Не удалось сохранить игру:', e);
-            }
-        }
-
-        function loadGame() {
-            try {
-                const saved = localStorage.getItem(SAVE_KEY);
-                if (!saved) {
-                    console.log('📭 Сохранений не найдено, начинаем новую игру');
-                    return false;
-                }
-
-                const data = JSON.parse(saved);
-                
-                // Восстанавливаем данные
-                score = data.score || 0;
-                azotiki = data.azotiki || 0;
-                catchRadius = data.catchRadius || 30;
-                maxChildren = data.maxChildren || 5;
-                speedLevel = data.speedLevel || 1;
-                costs = data.costs || { radius: 50, children: 80, speed: 60 };
-
-                console.log('📂 Загружено сохранение от:', new Date(data.timestamp).toLocaleString());
-                console.log('   ⭐ Азотиков:', azotiki);
-                console.log('   🏆 Счёт:', score);
-                console.log('   📏 Радиус:', catchRadius);
-                console.log('   👶 Детей:', maxChildren);
-                console.log('   ⚡ Скорость:', speedLevel);
-                
-                return true;
-            } catch (e) {
-                console.warn('Не удалось загрузить сохранение:', e);
-                return false;
-            }
-        }
-
-        function resetProgress() {
-            if (confirm('⚠️ Вы уверены, что хотите сбросить весь прогресс?')) {
-                localStorage.removeItem(SAVE_KEY);
-                // Сбрасываем игровые переменные
-                score = 0;
-                azotiki = 0;
-                catchRadius = 30;
-                maxChildren = 5;
-                speedLevel = 1;
-                costs = { radius: 50, children: 80, speed: 60 };
-                
-                // Пересоздаём детей
-                children = [];
-                spawnChildren();
-                updateUI();
-                showNotification('🗑️ Прогресс сброшен!');
-                saveGame();
-            }
-        }
-
-        // --- Автосохранение каждые 5 секунд ---
-        setInterval(() => {
-            saveGame();
-        }, 5000);
-
-        // --- Сохраняем при закрытии страницы ---
-        window.addEventListener('beforeunload', () => {
-            saveGame();
-        });
-
-        // --- Сохраняем при сворачивании (для мобильных) ---
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                saveGame();
-            }
-        });
-
-        // =====================================================
-        // ===== ИГРОВЫЕ ПЕРЕМЕННЫЕ =====
-        // =====================================================
-        let score = 0;
-        let azotiki = 0;
-        let catchRadius = 30;
-        let maxChildren = 5;
-        let speedLevel = 1;
-        let children = [];
-        let spawnTimer = 0;
-        let gameRunning = true;
-        let animationId = null;
-        let gameLoaded = false;
-
-        // Цены улучшений
-        let costs = {
-            radius: 50,
-            children: 80,
-            speed: 60
-        };
-
-        // --- Canvas ---
+        // ===== ПРОСТОЙ ТЕСТ ДЕТЕЙ =====
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // --- Элементы UI ---
-        const scoreEl = document.getElementById('score');
-        const azotikiEl = document.getElementById('azotiki');
-        const shopAzotikiEl = document.getElementById('shopAzotiki');
-        const shopModal = document.getElementById('shopModal');
-        const notification = document.getElementById('notification');
-        let notificationTimeout = null;
-
-        // --- Класс ребёнка ---
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // Класс ребёнка
         class Child {
             constructor() {
-                this.radius = 18;
-                const maxSpeed = 2 + speedLevel * 0.5;
-                this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
-                this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
-                this.speedX = (Math.random() - 0.5) * maxSpeed * 2;
-                this.speedY = (Math.random() - 0.5) * maxSpeed * 2;
-                this.color = this.randomColor();
-                this.names = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля', 'Дима', 'Катя', 'Серёжа', 'Таня', 'Миша', 'Лена', 'Вова'];
-                this.name = this.names[Math.floor(Math.random() * this.names.length)];
+                this.radius = 25;
+                this.x = Math.random() * (canvas.width - 50) + 25;
+                this.y = Math.random() * (canvas.height - 50) + 25;
+                this.speedX = (Math.random() - 0.5) * 4;
+                this.speedY = (Math.random() - 0.5) * 4;
+                this.name = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля'][Math.floor(Math.random() * 5)];
+                this.color = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF6BFF'][Math.floor(Math.random() * 5)];
             }
-
-            randomColor() {
-                const colors = ['#FF4757', '#FF6B81', '#FFA502', '#2ED573', '#1E90FF', '#A29BFE', '#FD79A8', '#00CEC9', '#F368E0', '#FF9FF3'];
-                return colors[Math.floor(Math.random() * colors.length)];
-            }
-
+            
             move() {
                 this.x += this.speedX;
                 this.y += this.speedY;
-
-                if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) {
-                    this.speedX = -this.speedX;
-                }
-                if (this.y - this.radius <= 0 || this.y + this.radius >= canvas.height) {
-                    this.speedY = -this.speedY;
-                }
+                if (this.x < 25 || this.x > canvas.width - 25) this.speedX = -this.speedX;
+                if (this.y < 25 || this.y > canvas.height - 25) this.speedY = -this.speedY;
             }
-
+            
             draw(ctx) {
                 // Тело
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
                 ctx.fillStyle = this.color;
                 ctx.fill();
-                ctx.strokeStyle = '#2d3436';
+                ctx.strokeStyle = '#333';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-
+                
                 // Глаза
-                ctx.fillStyle = '#2d3436';
+                ctx.fillStyle = 'white';
                 ctx.beginPath();
-                ctx.arc(this.x - 6, this.y - 4, 3, 0, Math.PI * 2);
+                ctx.arc(this.x - 8, this.y - 5, 6, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(this.x + 6, this.y - 4, 3, 0, Math.PI * 2);
+                ctx.arc(this.x + 8, this.y - 5, 6, 0, Math.PI * 2);
                 ctx.fill();
-
+                
+                // Зрачки
+                ctx.fillStyle = '#333';
+                ctx.beginPath();
+                ctx.arc(this.x - 6, this.y - 3, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + 10, this.y - 3, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
                 // Улыбка
                 ctx.beginPath();
-                ctx.arc(this.x, this.y + 2, 8, 0.1, Math.PI - 0.1);
+                ctx.arc(this.x, this.y + 4, 8, 0.1, Math.PI - 0.1);
                 ctx.stroke();
-
+                
                 // Имя
-                ctx.fillStyle = '#2d3436';
-                ctx.font = '12px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 14px Arial';
                 ctx.textAlign = 'center';
-                ctx.fillText(this.name, this.x, this.y + this.radius + 16);
-
-                // Блики
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.beginPath();
-                ctx.arc(this.x - 5, this.y - 7, 4, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            isClicked(mx, my) {
-                const dx = this.x - mx;
-                const dy = this.y - my;
-                return (dx * dx + dy * dy) <= (catchRadius * catchRadius);
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 8;
+                ctx.fillText(this.name, this.x, this.y + this.radius + 22);
+                ctx.shadowBlur = 0;
             }
         }
-
-        // --- Функции ---
-        function spawnChildren() {
-            while (children.length < maxChildren) {
-                children.push(new Child());
-            }
+        
+        // Создаём детей
+        const children = [];
+        for (let i = 0; i < 5; i++) {
+            children.push(new Child());
         }
-
-        function showNotification(text, isGood = true) {
-            notification.textContent = text;
-            notification.style.background = isGood ? 'rgba(46, 213, 115, 0.9)' : 'rgba(255, 71, 87, 0.9)';
-            notification.classList.remove('hidden');
-            
-            if (notificationTimeout) {
-                clearTimeout(notificationTimeout);
-            }
-            notificationTimeout = setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 1500);
-        }
-
-        function showCatchEffect(x, y) {
-            const effect = document.createElement('div');
-            effect.className = 'catch-effect';
-            effect.style.left = x - 30 + 'px';
-            effect.style.top = y - 30 + 'px';
-            effect.style.width = '60px';
-            effect.style.height = '60px';
-            effect.style.borderRadius = '50%';
-            effect.style.border = '3px solid #FFD700';
-            effect.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6)';
-            document.body.appendChild(effect);
-            
-            setTimeout(() => {
-                effect.remove();
-            }, 600);
-        }
-
-        function updateUI() {
-            scoreEl.textContent = score;
-            azotikiEl.textContent = azotiki;
-            shopAzotikiEl.textContent = azotiki;
-            document.getElementById('radiusLevel').textContent = catchRadius;
-            document.getElementById('childrenLevel').textContent = maxChildren;
-            document.getElementById('speedLevel').textContent = speedLevel;
-            
-            // Обновляем кнопки магазина
-            document.getElementById('buyRadius').disabled = azotiki < costs.radius;
-            document.getElementById('buyChildren').disabled = azotiki < costs.children;
-            document.getElementById('buySpeed').disabled = azotiki < costs.speed;
-            
-            document.querySelector('#buyRadius .cost').textContent = costs.radius;
-            document.querySelector('#buyChildren .cost').textContent = costs.children;
-            document.querySelector('#buySpeed .cost').textContent = costs.speed;
-        }
-
-        // --- Игровой цикл ---
+        
+        console.log('✅ Создано детей:', children.length);
+        
+        // Игровой цикл
         function gameLoop() {
-            // Очистка
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Спавн детей
-            spawnTimer++;
-            if (spawnTimer > 30 && children.length < maxChildren) {
-                children.push(new Child());
-                spawnTimer = 0;
-            }
-
-            // Обновление и рисование детей
-            for (let i = children.length - 1; i >= 0; i--) {
-                const child = children[i];
+            
+            for (const child of children) {
                 child.move();
                 child.draw(ctx);
             }
-
+            
             // Подсказка
             ctx.fillStyle = 'rgba(255,255,255,0.3)';
-            ctx.font = '14px Arial';
+            ctx.font = '16px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('👆 Лови детей!', canvas.width / 2, canvas.height - 30);
-
-            updateUI();
-            animationId = requestAnimationFrame(gameLoop);
+            ctx.fillText('👆 Вот они! 5 детей бегают!', canvas.width / 2, 50);
+            
+            requestAnimationFrame(gameLoop);
         }
-
-        // --- Обработка кликов ---
-        function handleCanvasClick(e) {
-            e.preventDefault();
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
-            let clientX, clientY;
-            if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-                e.preventDefault();
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
-
-            let caught = false;
-            for (let i = children.length - 1; i >= 0; i--) {
-                if (children[i].isClicked(x, y)) {
-                    const caughtChild = children[i];
-                    children.splice(i, 1);
-                    score++;
-                    azotiki += 5;
-                    showCatchEffect(clientX, clientY);
-                    showNotification(`🎉 Поймал ${caughtChild.name}! +5 ⭐`);
-                    
-                    if (children.length < maxChildren) {
-                        children.push(new Child());
-                    }
-                    
-                    caught = true;
-                    // Сохраняем сразу после ловли
-                    saveGame();
-                    break;
-                }
-            }
-            
-            if (!caught) {
-                showNotification('😅 Мимо!', false);
-            }
-            
-            updateUI();
-        }
-
-        // --- События ---
-        canvas.addEventListener('click', handleCanvasClick);
-        canvas.addEventListener('touchstart', handleCanvasClick, { passive: false });
-
-        // --- Магазин ---
-        document.getElementById('shopBtn').addEventListener('click', () => {
-            shopModal.classList.remove('hidden');
-            updateUI();
-        });
-
-        document.getElementById('closeShop').addEventListener('click', () => {
-            shopModal.classList.add('hidden');
-            saveGame();
-        });
-
-        shopModal.addEventListener('click', (e) => {
-            if (e.target === shopModal) {
-                shopModal.classList.add('hidden');
-                saveGame();
-            }
-        });
-
-        // --- Улучшения ---
-        document.getElementById('buyRadius').addEventListener('click', () => {
-            if (azotiki >= costs.radius) {
-                azotiki -= costs.radius;
-                catchRadius += 5;
-                costs.radius += 30;
-                showNotification('📏 Радиус увеличен до ' + catchRadius + 'px!');
-                updateUI();
-                saveGame();
-            } else {
-                showNotification('❌ Не хватает Азотиков!', false);
-            }
-        });
-
-        document.getElementById('buyChildren').addEventListener('click', () => {
-            if (azotiki >= costs.children) {
-                azotiki -= costs.children;
-                maxChildren += 1;
-                costs.children += 40;
-                showNotification('👨‍👩‍👧‍👦 Детей стало больше! (' + maxChildren + ')');
-                spawnChildren();
-                updateUI();
-                saveGame();
-            } else {
-                showNotification('❌ Не хватает Азотиков!', false);
-            }
-        });
-
-        document.getElementById('buySpeed').addEventListener('click', () => {
-            if (azotiki >= costs.speed) {
-                azotiki -= costs.speed;
-                speedLevel += 1;
-                costs.speed += 30;
-                showNotification('⚡ Дети стали быстрее! (уровень ' + speedLevel + ')');
-                // Обновляем скорость у всех детей
-                const maxSpeed = 2 + speedLevel * 0.5;
-                children.forEach(child => {
-                    const currentSpeed = Math.sqrt(child.speedX * child.speedX + child.speedY * child.speedY);
-                    if (currentSpeed > 0) {
-                        const ratio = maxSpeed / currentSpeed;
-                        child.speedX *= ratio;
-                        child.speedY *= ratio;
-                    }
-                });
-                updateUI();
-                saveGame();
-            } else {
-                showNotification('❌ Не хватает Азотиков!', false);
-            }
-        });
-
-        // --- Сброс прогресса ---
-        document.getElementById('resetBtn').addEventListener('click', () => {
-            resetProgress();
-        });
-
-        document.getElementById('resetProgressBtn').addEventListener('click', () => {
-            resetProgress();
-            shopModal.classList.add('hidden');
-        });
-
-        // =====================================================
-        // ===== ЗАПУСК ИГРЫ =====
-        // =====================================================
         
-        // Загружаем сохранение
-        loadGame();
-        
-        // Создаём детей
-        spawnChildren();
-        
-        // Обновляем UI
-        updateUI();
-        
-        // Запускаем игровой цикл
         gameLoop();
         
-        // Сохраняем после запуска
-        setTimeout(saveGame, 1000);
-
-        console.log('🏕️ Игра "Лагерь Звёздный" запущена!');
-        console.log('👶 Детей на экране:', children.length);
-        console.log('⭐ Азотиков:', azotiki);
-        console.log('💾 Автосохранение каждые 5 секунд');
+        console.log('🎮 Игра запущена! Дети должны быть видны на экране.');
     </script>
 </body>
 </html>
