@@ -2,35 +2,36 @@ import pygame
 import random
 import sys
 
-# Инициализация Pygame
+# Инициализация
 pygame.init()
 
-# Константы экрана
-WIDTH, HEIGHT = 800, 600
+# Размеры окна
+WIDTH = 800
+HEIGHT = 600
 FPS = 60
 
 # Цвета
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GREEN = (0, 200, 0)
-DARK_GREEN = (0, 150, 0)
-BLUE = (50, 150, 255)
 RED = (255, 50, 50)
+GREEN = (0, 200, 0)
+BLUE = (50, 150, 255)
 YELLOW = (255, 255, 0)
 PURPLE = (200, 50, 200)
 ORANGE = (255, 150, 50)
 LIGHT_BLUE = (100, 200, 255)
-BROWN = (139, 69, 19)
 GRAY = (100, 100, 100)
+DARK_GRAY = (50, 50, 50)
+GOLD = (255, 215, 0)
 
-# Настройки экрана
+# Создаём окно
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Лагерь 'Звездный' - Лови детей!")
+pygame.display.set_caption("🏕️ Лагерь 'Звёздный' - Лови детей!")
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 36)
 font_small = pygame.font.Font(None, 28)
 
-# Класс ребенка
+# Класс ребёнка
 class Child:
     def __init__(self):
         self.radius = 20
@@ -39,11 +40,14 @@ class Child:
         self.color = random.choice([RED, YELLOW, BLUE, PURPLE, ORANGE, LIGHT_BLUE])
         self.speed_x = random.choice([-3, -2, 2, 3])
         self.speed_y = random.choice([-3, -2, 2, 3])
-        self.name = random.choice(["Аня", "Петя", "Маша", "Коля", "Оля", "Дима", "Катя", "Серёжа"])
+        self.names = ["Аня", "Петя", "Маша", "Коля", "Оля", "Дима", "Катя", "Серёжа", "Таня", "Миша"]
+        self.name = random.choice(self.names)
+        self.caught = False
 
     def move(self):
         self.x += self.speed_x
         self.y += self.speed_y
+        
         # Отскок от стен
         if self.x - self.radius <= 0 or self.x + self.radius >= WIDTH:
             self.speed_x = -self.speed_x
@@ -51,186 +55,202 @@ class Child:
             self.speed_y = -self.speed_y
 
     def draw(self, surface):
+        # Тело
         pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.radius)
         pygame.draw.circle(surface, BLACK, (int(self.x), int(self.y)), self.radius, 2)
-        # Глазки
+        
+        # Глаза
         pygame.draw.circle(surface, BLACK, (int(self.x - 7), int(self.y - 5)), 3)
         pygame.draw.circle(surface, BLACK, (int(self.x + 7), int(self.y - 5)), 3)
-        # Имя под ребенком
+        
+        # Улыбка
+        pygame.draw.arc(surface, BLACK, (int(self.x - 8), int(self.y - 5), 16, 12), 0.1, 3.0, 2)
+        
+        # Имя
         name_text = font_small.render(self.name, True, BLACK)
-        surface.blit(name_text, (int(self.x - 15), int(self.y + self.radius + 2)))
+        surface.blit(name_text, (int(self.x - name_text.get_width() // 2), int(self.y + self.radius + 5)))
 
     def get_rect(self):
         return pygame.Rect(self.x - self.radius, self.y - self.radius, self.radius * 2, self.radius * 2)
 
-# Класс кнопки (для магазина)
+# Класс кнопки
 class Button:
     def __init__(self, x, y, width, height, text, color, text_color=BLACK):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.color = color
         self.text_color = text_color
-        self.is_hovered = False
+        self.hovered = False
 
     def draw(self, surface):
         color = self.color
-        if self.is_hovered:
+        if self.hovered:
             color = tuple(min(c + 30, 255) for c in self.color)
+        
         pygame.draw.rect(surface, color, self.rect)
         pygame.draw.rect(surface, BLACK, self.rect, 2)
+        
         text_surf = font_small.render(self.text, True, self.text_color)
         text_rect = text_surf.get_rect(center=self.rect.center)
         surface.blit(text_surf, text_rect)
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEMOTION:
-            self.is_hovered = self.rect.collidepoint(event.pos)
+            self.hovered = self.rect.collidepoint(event.pos)
+            return False
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 return True
         return False
 
-# Основная функция игры
+# Основная функция
 def main():
-    # Переменные игры
+    # Игровые переменные
     children = []
-    score = 0  # Количество пойманных детей
-    azotiki = 0  # Игровая валюта
-    catch_radius = 30  # Радиус ловли (улучшаемый)
-    max_children = 5  # Максимальное количество детей (улучшаемое)
+    score = 0
+    azotiki = 0
+    catch_radius = 30
+    max_children = 5
     spawn_timer = 0
-    game_over = False
     show_shop = False
-
-    # Улучшения и их цены
-    upgrade_radius_cost = 50
-    upgrade_max_children_cost = 80
+    game_running = True
+    
+    # Улучшения
     radius_level = 1
     max_children_level = 1
-
-    # Создаем начальных детей
+    radius_cost = 50
+    max_children_cost = 80
+    
+    # Создаём начальных детей
     for _ in range(max_children):
         children.append(Child())
-
-    # Кнопки магазина
-    btn_shop = Button(10, 10, 120, 40, "Магазин", GREEN)
-    btn_close_shop = Button(WIDTH - 150, 10, 130, 40, "Закрыть", RED)
-    btn_upgrade_radius = Button(100, 150, 250, 60, f"Увеличить радиус ({upgrade_radius_cost} Аз.)", BLUE)
-    btn_upgrade_max = Button(100, 240, 250, 60, f"Больше детей ({upgrade_max_children_cost} Аз.)", ORANGE)
-
-    # Основной игровой цикл
+    
+    # Кнопки
+    btn_shop = Button(10, 10, 120, 40, "🛒 Магазин", GREEN)
+    btn_close = Button(WIDTH - 150, 10, 130, 40, "❌ Закрыть", RED)
+    btn_radius = Button(100, 150, 300, 60, f"📏 Радиус ({radius_cost} ⭐)", BLUE)
+    btn_max = Button(100, 240, 300, 60, f"👨‍👩‍👧‍👦 Дети ({max_children_cost} ⭐)", ORANGE)
+    
+    # Главный цикл
     running = True
     while running:
         screen.fill(WHITE)
-
+        
         # Обработка событий
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-
+            
             # Клик по детям (ловля)
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not show_shop and not game_over:
-                mouse_x, mouse_y = event.pos
-                for child in children[:]:
-                    # Проверяем попадание по кругу (с учетом улучшенного радиуса)
-                    dist = ((child.x - mouse_x) ** 2 + (child.y - mouse_y) ** 2) ** 0.5
-                    if dist <= catch_radius:
-                        children.remove(child)
-                        score += 1
-                        azotiki += 5  # За каждого ребенка даем 5 азотиков
-                        # Добавляем нового ребенка (чтобы не пустело)
-                        if len(children) < max_children:
-                            children.append(Child())
-
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if not show_shop and game_running:
+                    mx, my = event.pos
+                    for child in children[:]:
+                        dist = ((child.x - mx) ** 2 + (child.y - my) ** 2) ** 0.5
+                        if dist <= catch_radius:
+                            children.remove(child)
+                            score += 1
+                            azotiki += 5
+                            # Сразу создаём нового
+                            if len(children) < max_children:
+                                children.append(Child())
+            
             # Обработка кнопок
             if show_shop:
-                if btn_close_shop.handle_event(event):
+                if btn_close.handle_event(event):
                     show_shop = False
-                if btn_upgrade_radius.handle_event(event):
-                    if azotiki >= upgrade_radius_cost:
-                        azotiki -= upgrade_radius_cost
+                if btn_radius.handle_event(event):
+                    if azotiki >= radius_cost:
+                        azotiki -= radius_cost
                         catch_radius += 5
                         radius_level += 1
-                        upgrade_radius_cost += 30  # Увеличиваем цену
-                        btn_upgrade_radius.text = f"Увеличить радиус ({upgrade_radius_cost} Аз.)"
-                if btn_upgrade_max.handle_event(event):
-                    if azotiki >= upgrade_max_children_cost:
-                        azotiki -= upgrade_max_children_cost
+                        radius_cost += 30
+                        btn_radius.text = f"📏 Радиус ({radius_cost} ⭐)"
+                if btn_max.handle_event(event):
+                    if azotiki >= max_children_cost:
+                        azotiki -= max_children_cost
                         max_children += 1
                         max_children_level += 1
-                        upgrade_max_children_cost += 40
-                        btn_upgrade_max.text = f"Больше детей ({upgrade_max_children_cost} Аз.)"
+                        max_children_cost += 40
+                        btn_max.text = f"👨‍👩‍👧‍👦 Дети ({max_children_cost} ⭐)"
             else:
                 if btn_shop.handle_event(event):
                     show_shop = True
-
-        # Обновление игры (если не в магазине и не game over)
-        if not show_shop and not game_over:
-            # Спавн новых детей, если меньше максимума
+        
+        # Обновление игры
+        if not show_shop and game_running:
             spawn_timer += 1
             if spawn_timer > 30 and len(children) < max_children:
                 children.append(Child())
                 spawn_timer = 0
-
-            # Движение детей
+            
             for child in children:
                 child.move()
-
-        # Отрисовка
-        # Рисуем детей
+        
+        # Рисование детей
         for child in children:
             child.draw(screen)
-
-        # Отображение статистики
-        score_text = font.render(f"Поймано: {score}", True, BLACK)
+        
+        # Рисование интерфейса
+        # Счёт
+        score_text = font.render(f"🏆 Поймано: {score}", True, BLACK)
         screen.blit(score_text, (WIDTH - 250, 10))
-
-        azotiki_text = font.render(f"⭐ Азотики: {azotiki}", True, (255, 215, 0))
+        
+        azotiki_text = font.render(f"⭐ Азотики: {azotiki}", True, GOLD)
         screen.blit(azotiki_text, (WIDTH - 250, 50))
-
-        radius_text = font_small.render(f"Радиус: {catch_radius}", True, BLACK)
+        
+        radius_text = font_small.render(f"🎯 Радиус: {catch_radius}", True, DARK_GRAY)
         screen.blit(radius_text, (WIDTH - 250, 90))
-
-        # Кнопка магазина (если не в магазине)
+        
+        children_text = font_small.render(f"👶 Детей: {len(children)}/{max_children}", True, DARK_GRAY)
+        screen.blit(children_text, (WIDTH - 250, 120))
+        
+        # Кнопка магазина
         if not show_shop:
             btn_shop.draw(screen)
-
+        
         # Магазин
         if show_shop:
-            # Затемненный фон
-            overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
-            overlay.fill((0, 0, 0, 180))
+            # Затемнение
+            overlay = pygame.Surface((WIDTH, HEIGHT))
+            overlay.set_alpha(180)
+            overlay.fill((0, 0, 0))
             screen.blit(overlay, (0, 0))
-
-            # Рисуем окно магазина
+            
+            # Окно магазина
             shop_rect = pygame.Rect(150, 80, 500, 400)
             pygame.draw.rect(screen, WHITE, shop_rect)
             pygame.draw.rect(screen, BLACK, shop_rect, 3)
-
-            title = font.render("🛒 Магазин улучшений", True, BLACK)
+            
+            # Заголовок
+            title = font.render("🏪 МАГАЗИН УЛУЧШЕНИЙ", True, BLACK)
             screen.blit(title, (shop_rect.centerx - title.get_width() // 2, shop_rect.y + 20))
-
-            # Информация об азотиках в магазине
-            shop_azotiki = font.render(f"⭐ {azotiki} Азотиков", True, (255, 215, 0))
-            screen.blit(shop_azotiki, (shop_rect.centerx - shop_azotiki.get_width() // 2, shop_rect.y + 70))
-
+            
+            # Баланс в магазине
+            balance = font.render(f"⭐ {azotiki} Азотиков", True, GOLD)
+            screen.blit(balance, (shop_rect.centerx - balance.get_width() // 2, shop_rect.y + 70))
+            
             # Кнопки улучшений
-            btn_upgrade_radius.draw(screen)
-            btn_upgrade_max.draw(screen)
-
+            btn_radius.draw(screen)
+            btn_max.draw(screen)
+            
             # Информация об улучшениях
-            info_radius = font_small.render(f"Текущий радиус: {catch_radius} (уровень {radius_level})", True, BLACK)
-            screen.blit(info_radius, (shop_rect.x + 20, shop_rect.y + 220))
-            info_max = font_small.render(f"Макс. детей: {max_children} (уровень {max_children_level})", True, BLACK)
-            screen.blit(info_max, (shop_rect.x + 20, shop_rect.y + 310))
-
+            info1 = font_small.render(f"Текущий радиус: {catch_radius} (уровень {radius_level})", True, BLACK)
+            screen.blit(info1, (shop_rect.x + 30, shop_rect.y + 230))
+            
+            info2 = font_small.render(f"Максимум детей: {max_children} (уровень {max_children_level})", True, BLACK)
+            screen.blit(info2, (shop_rect.x + 30, shop_rect.y + 320))
+            
+            # Подсказка
+            hint = font_small.render("💡 Лови детей, чтобы зарабатывать Азотики!", True, GRAY)
+            screen.blit(hint, (shop_rect.centerx - hint.get_width() // 2, shop_rect.y + 370))
+            
             # Кнопка закрытия
-            btn_close_shop.draw(screen)
-
-        # Обновление экрана
+            btn_close.draw(screen)
+        
         pygame.display.flip()
         clock.tick(FPS)
-
+    
     pygame.quit()
     sys.exit()
 
