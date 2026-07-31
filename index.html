@@ -33,7 +33,7 @@
             top: 0;
             left: 0;
             right: 0;
-            padding: 6px 10px;
+            padding: 12px 16px;
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(10px);
             display: flex;
@@ -41,23 +41,56 @@
             align-items: center;
             z-index: 10;
             border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-            flex-wrap: wrap;
-            gap: 4px;
         }
 
-        .top-left {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .btn-icon {
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+        .btn-shop {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            width: 34px;
-            height: 34px;
+            width: 44px;
+            height: 44px;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-shop:active {
+            transform: scale(0.9);
+        }
+
+        #stats {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            backdrop-filter: blur(5px);
+        }
+
+        .stat-item .icon {
+            font-size: 18px;
+        }
+
+        /* Кнопка сброса */
+        .btn-reset {
+            background: rgba(255, 71, 87, 0.3);
+            border: 2px solid rgba(255, 71, 87, 0.5);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
             font-size: 16px;
             cursor: pointer;
             transition: all 0.2s;
@@ -65,34 +98,11 @@
             align-items: center;
             justify-content: center;
             color: white;
+            margin-left: 8px;
         }
 
-        .btn-icon:active {
+        .btn-reset:active {
             transform: scale(0.9);
-        }
-
-        #stats {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            background: rgba(255, 255, 255, 0.12);
-            padding: 3px 8px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            gap: 3px;
-            font-size: 12px;
-            font-weight: bold;
-            color: white;
-            backdrop-filter: blur(5px);
-        }
-
-        .stat-item .icon {
-            font-size: 14px;
         }
 
         /* Игровое поле */
@@ -100,59 +110,9 @@
             display: block;
             width: 100vw;
             height: 100vh;
+            background: radial-gradient(ellipse at center, #87CEEB 0%, #4A90D9 100%);
             cursor: pointer;
             touch-action: none;
-            position: relative;
-        }
-
-        /* Фоновый контейнер */
-        #backgroundContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        #backgroundText {
-            font-size: clamp(50px, 10vw, 130px);
-            font-weight: 900;
-            color: rgba(255, 255, 255, 0.08);
-            text-shadow: 0 0 40px rgba(255, 215, 0, 0.05);
-            letter-spacing: 6px;
-            text-align: center;
-            font-family: 'Arial Black', Arial, sans-serif;
-            line-height: 1.1;
-            user-select: none;
-            animation: textPulse 4s ease-in-out infinite;
-            position: relative;
-            z-index: 2;
-            transform: rotate(-5deg);
-        }
-
-        #zubrSticker {
-            font-size: clamp(70px, 16vw, 180px);
-            animation: zubrFloat 6s ease-in-out infinite;
-            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.1));
-            margin-top: -15px;
-            position: relative;
-            z-index: 2;
-        }
-
-        @keyframes textPulse {
-            0%, 100% { opacity: 0.5; transform: rotate(-5deg) scale(1); }
-            50% { opacity: 0.8; transform: rotate(-5deg) scale(1.02); }
-        }
-
-        @keyframes zubrFloat {
-            0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-12px) scale(1.05); }
         }
 
         /* Модальное окно */
@@ -189,10 +149,10 @@
         .modal-content {
             background: white;
             border-radius: 20px;
-            padding: 16px;
-            max-width: 420px;
-            width: 92%;
-            max-height: 85vh;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
             overflow-y: auto;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
@@ -201,18 +161,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
         .modal-header h2 {
-            font-size: 20px;
+            font-size: 22px;
             color: #333;
         }
 
         .close-btn {
             background: none;
             border: none;
-            font-size: 26px;
+            font-size: 28px;
             color: #999;
             cursor: pointer;
             padding: 0 8px;
@@ -224,29 +184,30 @@
 
         .balance {
             background: linear-gradient(135deg, #FFD700, #FFA500);
-            padding: 10px;
+            padding: 12px;
             border-radius: 12px;
             text-align: center;
-            font-size: 17px;
+            font-size: 20px;
             font-weight: bold;
             color: #333;
-            margin-bottom: 14px;
+            margin-bottom: 20px;
         }
 
         .upgrade-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
 
         .upgrade-item {
             background: #f8f9fa;
             border-radius: 12px;
-            padding: 10px 12px;
+            padding: 14px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border: 2px solid #e9ecef;
+            transition: border-color 0.2s;
         }
 
         .upgrade-item:active {
@@ -256,33 +217,33 @@
         .upgrade-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex: 1;
         }
 
         .upgrade-icon {
-            font-size: 22px;
+            font-size: 28px;
         }
 
         .upgrade-title {
             font-weight: bold;
-            font-size: 13px;
+            font-size: 15px;
             color: #333;
         }
 
         .upgrade-desc {
-            font-size: 11px;
+            font-size: 13px;
             color: #666;
-            margin-top: 1px;
+            margin-top: 2px;
         }
 
         .buy-btn {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 5px 12px;
-            border-radius: 14px;
-            font-size: 11px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
             font-weight: bold;
             cursor: pointer;
             white-space: nowrap;
@@ -302,60 +263,46 @@
             color: #FFD700;
         }
 
-        .tab-bar {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 6px;
+        .reset-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px solid #e9ecef;
+            text-align: center;
         }
 
-        .tab-btn {
-            flex: 1;
-            padding: 6px;
+        .btn-reset-data {
+            background: #dc3545;
+            color: white;
             border: none;
-            background: #f1f3f5;
-            border-radius: 8px;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s;
-            font-size: 12px;
+            transition: transform 0.2s, opacity 0.2s;
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-
-        .tab-btn:active {
+        .btn-reset-data:active {
             transform: scale(0.95);
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
         }
 
         /* Уведомление */
         .notification {
             position: fixed;
-            top: 65px;
+            top: 80px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.85);
             color: white;
-            padding: 8px 18px;
-            border-radius: 10px;
-            font-size: 14px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
             font-weight: bold;
             backdrop-filter: blur(10px);
             z-index: 50;
             animation: slideDown 0.5s ease;
             text-align: center;
-            max-width: 85%;
+            max-width: 80%;
             pointer-events: none;
         }
 
@@ -393,228 +340,52 @@
             }
         }
 
-        /* Босс */
-        .boss-notification {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 42px;
-            z-index: 30;
-            animation: bossAppear 1s ease forwards;
-            pointer-events: none;
-        }
-
-        @keyframes bossAppear {
-            0% {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0;
-            }
-            50% {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* Ежедневные задания */
-        .daily-task {
-            background: #f1f3f5;
-            border-radius: 10px;
-            padding: 8px 10px;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .daily-task .task-info {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-        }
-
-        .daily-task .task-name {
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        .daily-task .task-progress {
-            font-size: 11px;
-            color: #666;
-        }
-
-        .daily-task .task-reward {
-            font-size: 13px;
-            font-weight: bold;
-            color: #FFD700;
-        }
-
-        .daily-task .claim-btn {
-            background: linear-gradient(135deg, #2ED573, #26de81);
-            color: white;
-            border: none;
-            padding: 3px 10px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .daily-task .claim-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .vip-item {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
-            border-radius: 12px;
-            padding: 10px 12px;
-            margin-bottom: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .vip-item .vip-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .vip-item .vip-price {
-            font-weight: bold;
-            color: #333;
-        }
-
-        /* Профиль */
-        .profile-item {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 10px 12px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 2px solid #e9ecef;
-        }
-
-        .profile-item .profile-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .toggle-btn {
-            background: #e9ecef;
-            border: none;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 13px;
-        }
-
-        .toggle-btn.on {
-            background: #2ED573;
-            color: white;
-        }
-
-        .toggle-btn.off {
-            background: #ff4757;
-            color: white;
-        }
-
-        .support-btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #0088cc, #0055a4);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-align: center;
-            text-decoration: none;
-        }
-
-        .support-btn:active {
-            transform: scale(0.95);
-        }
-
         /* Мобильная адаптация */
         @media (max-width: 480px) {
             .stat-item {
-                font-size: 10px;
-                padding: 2px 6px;
+                font-size: 14px;
+                padding: 4px 10px;
             }
-            .btn-icon {
-                width: 28px;
-                height: 28px;
-                font-size: 13px;
+            .btn-shop {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            .btn-reset {
+                width: 30px;
+                height: 30px;
+                font-size: 14px;
             }
             .modal-content {
-                padding: 10px;
+                padding: 16px;
             }
             .upgrade-item {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 4px;
+                gap: 10px;
             }
             .buy-btn {
                 width: 100%;
-            }
-            .tab-btn {
-                font-size: 10px;
-                padding: 4px;
-            }
-            .boss-notification {
-                font-size: 28px;
-            }
-            #backgroundText {
-                font-size: clamp(30px, 6vw, 60px) !important;
-            }
-            #zubrSticker {
-                font-size: clamp(40px, 10vw, 90px) !important;
             }
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- Фоновый текст и стикер -->
-        <div id="backgroundContainer">
-            <div id="backgroundText">ВОЛ"Купалинка"</div>
-            <div id="zubrSticker">🦬</div>
-        </div>
-
         <!-- Верхняя панель -->
         <div id="topPanel">
-            <div class="top-left">
-                <button id="shopBtn" class="btn-icon">🛒</button>
-                <button id="bossBtn" class="btn-icon">👾</button>
-                <button id="rebirthBtn" class="btn-icon">🔄</button>
-                <button id="profileBtn" class="btn-icon">👤</button>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="shopBtn" class="btn-shop">🛒</button>
+                <button id="resetBtn" class="btn-reset">🗑️</button>
             </div>
             <div id="stats">
                 <div class="stat-item">
+                    <span class="icon">🏆</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="stat-item">
                     <span class="icon">⭐</span>
                     <span id="azotiki">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="icon">🏆</span>
-                    <span id="cups">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="icon">✨</span>
-                    <span id="multiplier">x1</span>
                 </div>
             </div>
         </div>
@@ -626,194 +397,57 @@
         <div id="shopModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>🏪 Магазин</h2>
+                    <h2>🏪 Магазин улучшений</h2>
                     <button id="closeShop" class="close-btn">✕</button>
                 </div>
                 
                 <div class="balance">
-                    ⭐ <span id="shopAzotiki">0</span> | 🏆 <span id="shopCups">0</span> | ✨ x<span id="shopMultiplier">1</span>
+                    ⭐ Баланс: <span id="shopAzotiki">0</span>
                 </div>
 
-                <div class="tab-bar">
-                    <button class="tab-btn active" data-tab="upgrades">📈 Улучшения</button>
-                    <button class="tab-btn" data-tab="vip">👑 VIP</button>
-                    <button class="tab-btn" data-tab="daily">📅 Задания</button>
-                </div>
-
-                <!-- Вкладка Улучшения -->
-                <div class="tab-content active" id="tab-upgrades">
-                    <div class="upgrade-list">
-                        <div class="upgrade-item">
-                            <div class="upgrade-info">
-                                <span class="upgrade-icon">📏</span>
-                                <div>
-                                    <div class="upgrade-title">Радиус ловли</div>
-                                    <div class="upgrade-desc">Текущий: <span id="radiusLevel">30</span>px</div>
-                                </div>
-                            </div>
-                            <button class="buy-btn" id="buyRadius">
-                                Купить за <span class="cost">50</span> ⭐
-                            </button>
-                        </div>
-
-                        <div class="upgrade-item">
-                            <div class="upgrade-info">
-                                <span class="upgrade-icon">👨‍👩‍👧</span>
-                                <div>
-                                    <div class="upgrade-title">Больше детей</div>
-                                    <div class="upgrade-desc">Текущий: <span id="childrenLevel">5</span></div>
-                                </div>
-                            </div>
-                            <button class="buy-btn" id="buyChildren">
-                                Купить за <span class="cost">80</span> ⭐
-                            </button>
-                        </div>
-
-                        <div class="upgrade-item">
-                            <div class="upgrade-info">
-                                <span class="upgrade-icon">⚡</span>
-                                <div>
-                                    <div class="upgrade-title">Скорость детей</div>
-                                    <div class="upgrade-desc">Текущий: <span id="speedLevel">1</span></div>
-                                </div>
-                            </div>
-                            <button class="buy-btn" id="buySpeed">
-                                Купить за <span class="cost">60</span> ⭐
-                            </button>
-                        </div>
-
-                        <div class="upgrade-item" style="background:linear-gradient(135deg,#FFD70022,#FFA50022);border-color:#FFD700;">
-                            <div class="upgrade-info">
-                                <span class="upgrade-icon">✨</span>
-                                <div>
-                                    <div class="upgrade-title" style="color:#FFA500;">Множитель азотиков</div>
-                                    <div class="upgrade-desc">Текущий: x<span id="multiplierLevel">1</span></div>
-                                </div>
-                            </div>
-                            <button class="buy-btn" id="buyMultiplier" style="background:linear-gradient(135deg,#FFD700,#FFA500);">
-                                Купить за <span class="cost">50</span> 🏆
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Вкладка VIP -->
-                <div class="tab-content" id="tab-vip">
-                    <div class="vip-item" id="vipTheme1">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">🌅</span>
+                <div class="upgrade-list">
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <span class="upgrade-icon">📏</span>
                             <div>
-                                <div class="upgrade-title">Закатный фон</div>
-                                <div class="upgrade-desc">Красивый закат</div>
+                                <div class="upgrade-title">Увеличение радиуса</div>
+                                <div class="upgrade-desc">Текущий: <span id="radiusLevel">30</span>px</div>
                             </div>
                         </div>
-                        <button class="buy-btn vip-buy" data-type="theme" data-id="1">
-                            Купить за <span class="cost">100</span> 🏆
+                        <button class="buy-btn" id="buyRadius">
+                            Купить за <span class="cost">50</span> ⭐
                         </button>
                     </div>
 
-                    <div class="vip-item" id="vipTheme2">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">🌙</span>
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <span class="upgrade-icon">👨‍👩‍👧</span>
                             <div>
-                                <div class="upgrade-title">Ночной фон</div>
-                                <div class="upgrade-desc">Звёздная ночь</div>
+                                <div class="upgrade-title">Больше детей</div>
+                                <div class="upgrade-desc">Текущий: <span id="childrenLevel">5</span></div>
                             </div>
                         </div>
-                        <button class="buy-btn vip-buy" data-type="theme" data-id="2">
-                            Купить за <span class="cost">200</span> 🏆
+                        <button class="buy-btn" id="buyChildren">
+                            Купить за <span class="cost">80</span> ⭐
                         </button>
                     </div>
 
-                    <div class="vip-item" id="vipSkin1">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">🤖</span>
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <span class="upgrade-icon">⚡</span>
                             <div>
-                                <div class="upgrade-title">Робот-ребёнок</div>
-                                <div class="upgrade-desc">Кибер-стиль</div>
+                                <div class="upgrade-title">Скорость детей</div>
+                                <div class="upgrade-desc">Текущий: <span id="speedLevel">1</span></div>
                             </div>
                         </div>
-                        <button class="buy-btn vip-buy" data-type="skin" data-id="1">
-                            Купить за <span class="cost">150</span> 🏆
-                        </button>
-                    </div>
-
-                    <div class="vip-item" id="vipSkin2">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">👾</span>
-                            <div>
-                                <div class="upgrade-title">Инопланетянин</div>
-                                <div class="upgrade-desc">Пришелец</div>
-                            </div>
-                        </div>
-                        <button class="buy-btn vip-buy" data-type="skin" data-id="2">
-                            Купить за <span class="cost">250</span> 🏆
+                        <button class="buy-btn" id="buySpeed">
+                            Купить за <span class="cost">60</span> ⭐
                         </button>
                     </div>
                 </div>
 
-                <!-- Вкладка Ежедневные задания -->
-                <div class="tab-content" id="tab-daily">
-                    <div id="dailyTasks"></div>
-                    <div style="margin-top:10px;text-align:center;font-size:11px;color:#999;">
-                        Обновляется каждые 24 часа
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Профиль -->
-        <div id="profileModal" class="modal hidden">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>👤 Профиль</h2>
-                    <button id="closeProfile" class="close-btn">✕</button>
-                </div>
-
-                <div class="balance">
-                    ⭐ <span id="profileAzotiki">0</span> | 🏆 <span id="profileCups">0</span> | ✨ x<span id="profileMultiplier">1</span>
-                </div>
-
-                <div class="profile-item">
-                    <div class="profile-info">
-                        <span style="font-size:24px;">🔊</span>
-                        <div>
-                            <div class="upgrade-title">Звуки</div>
-                            <div class="upgrade-desc">Звук при ловле детей</div>
-                        </div>
-                    </div>
-                    <button id="soundToggle" class="toggle-btn on">Вкл</button>
-                </div>
-
-                <div class="profile-item">
-                    <div class="profile-info">
-                        <span style="font-size:24px;">🎵</span>
-                        <div>
-                            <div class="upgrade-title">Музыка</div>
-                            <div class="upgrade-desc">Фоновая музыка</div>
-                        </div>
-                    </div>
-                    <button id="musicToggle" class="toggle-btn on">Вкл</button>
-                </div>
-
-                <div style="margin-top:12px;padding-top:12px;border-top:2px solid #e9ecef;">
-                    <div style="display:flex;justify-content:space-between;padding:4px 0;">
-                        <span style="color:#666;">Всего поймано:</span>
-                        <span style="font-weight:bold;" id="totalCaught">0</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:4px 0;">
-                        <span style="color:#666;">Всего заработано ⭐:</span>
-                        <span style="font-weight:bold;" id="totalEarned">0</span>
-                    </div>
-                </div>
-
-                <div style="margin-top:12px;padding-top:12px;border-top:2px solid #e9ecef;">
-                    <a href="https://t.me/Dmitriymikha" target="_blank" class="support-btn" id="supportBtn">
-                        📩 Техническая поддержка
-                    </a>
-                    <div style="text-align:center;margin-top:6px;font-size:11px;color:#999;">
-                        @Dmitriymikha
-                    </div>
+                <div class="reset-section">
+                    <button id="resetProgressBtn" class="btn-reset-data">🗑️ Сбросить весь прогресс</button>
                 </div>
             </div>
         </div>
@@ -834,116 +468,7 @@
         }
 
         // =====================================================
-        // ===== ЗВУКИ =====
-        // =====================================================
-        class SoundManager {
-            constructor() {
-                this.soundEnabled = true;
-                this.musicEnabled = true;
-                this.ctx = null;
-                this.musicInterval = null;
-                this.initAudio();
-            }
-
-            initAudio() {
-                try {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.warn('Audio not supported');
-                }
-            }
-
-            playCatchSound() {
-                if (!this.soundEnabled || !this.ctx) return;
-                try {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    
-                    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.05);
-                    osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.1);
-                    
-                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-                    
-                    osc.start(this.ctx.currentTime);
-                    osc.stop(this.ctx.currentTime + 0.15);
-                } catch (e) {}
-            }
-
-            startMusic() {
-                if (!this.musicEnabled || !this.ctx) return;
-                if (this.musicInterval) return;
-                
-                this.playNote(440, 0.1);
-                setTimeout(() => this.playNote(554, 0.1), 150);
-                setTimeout(() => this.playNote(659, 0.15), 300);
-                setTimeout(() => this.playNote(554, 0.1), 500);
-                setTimeout(() => this.playNote(659, 0.15), 650);
-                setTimeout(() => this.playNote(784, 0.2), 800);
-                setTimeout(() => this.playNote(659, 0.15), 1000);
-                setTimeout(() => this.playNote(784, 0.2), 1150);
-                setTimeout(() => this.playNote(880, 0.25), 1300);
-                
-                this.musicInterval = setInterval(() => {
-                    if (!this.musicEnabled) return;
-                    this.playNote(440, 0.1);
-                    setTimeout(() => this.playNote(554, 0.1), 150);
-                    setTimeout(() => this.playNote(659, 0.15), 300);
-                    setTimeout(() => this.playNote(554, 0.1), 500);
-                    setTimeout(() => this.playNote(659, 0.15), 650);
-                    setTimeout(() => this.playNote(784, 0.2), 800);
-                    setTimeout(() => this.playNote(659, 0.15), 1000);
-                    setTimeout(() => this.playNote(784, 0.2), 1150);
-                    setTimeout(() => this.playNote(880, 0.25), 1300);
-                }, 2500);
-            }
-
-            playNote(freq, duration) {
-                if (!this.musicEnabled || !this.ctx) return;
-                try {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                    osc.start(this.ctx.currentTime);
-                    osc.stop(this.ctx.currentTime + duration);
-                } catch (e) {}
-            }
-
-            stopMusic() {
-                if (this.musicInterval) {
-                    clearInterval(this.musicInterval);
-                    this.musicInterval = null;
-                }
-            }
-
-            toggleSound() {
-                this.soundEnabled = !this.soundEnabled;
-                return this.soundEnabled;
-            }
-
-            toggleMusic() {
-                this.musicEnabled = !this.musicEnabled;
-                if (this.musicEnabled) {
-                    this.startMusic();
-                } else {
-                    this.stopMusic();
-                }
-                return this.musicEnabled;
-            }
-        }
-
-        const soundManager = new SoundManager();
-
-        // =====================================================
-        // ===== СИСТЕМА СОХРАНЕНИЯ =====
+        // ===== СИСТЕМА СОХРАНЕНИЯ ПРОГРЕССА =====
         // =====================================================
         const SAVE_KEY = 'campGameSave';
 
@@ -952,114 +477,107 @@
                 const saveData = {
                     score: score,
                     azotiki: azotiki,
-                    cups: cups,
-                    multiplier: multiplier,
-                    multiplierLevel: multiplierLevel,
                     catchRadius: catchRadius,
                     maxChildren: maxChildren,
                     speedLevel: speedLevel,
                     costs: costs,
-                    bossCooldown: bossCooldown,
-                    lastBossTime: lastBossTime,
-                    ownedThemes: ownedThemes,
-                    ownedSkins: ownedSkins,
-                    activeTheme: activeTheme,
-                    activeSkin: activeSkin,
-                    dailyTasks: dailyTasks,
-                    lastDailyReset: lastDailyReset,
-                    totalCaught: totalCaught,
-                    totalEarned: totalEarned,
-                    soundEnabled: soundManager.soundEnabled,
-                    musicEnabled: soundManager.musicEnabled,
                     timestamp: Date.now()
                 };
                 localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+                console.log('💾 Игра сохранена! ⭐ Азотиков:', azotiki);
             } catch (e) {
-                console.warn('Не удалось сохранить:', e);
+                console.warn('Не удалось сохранить игру:', e);
             }
         }
 
         function loadGame() {
             try {
                 const saved = localStorage.getItem(SAVE_KEY);
-                if (!saved) return false;
+                if (!saved) {
+                    console.log('📭 Сохранений не найдено, начинаем новую игру');
+                    return false;
+                }
 
                 const data = JSON.parse(saved);
+                
+                // Восстанавливаем данные
                 score = data.score || 0;
                 azotiki = data.azotiki || 0;
-                cups = data.cups || 0;
-                multiplier = data.multiplier || 1;
-                multiplierLevel = data.multiplierLevel || 1;
                 catchRadius = data.catchRadius || 30;
                 maxChildren = data.maxChildren || 5;
                 speedLevel = data.speedLevel || 1;
-                costs = data.costs || { radius: 50, children: 80, speed: 60, multiplier: 50 };
-                bossCooldown = data.bossCooldown || 3600;
-                lastBossTime = data.lastBossTime || 0;
-                ownedThemes = data.ownedThemes || [];
-                ownedSkins = data.ownedSkins || [];
-                activeTheme = data.activeTheme || 0;
-                activeSkin = data.activeSkin || 0;
-                dailyTasks = data.dailyTasks || generateDailyTasks();
-                lastDailyReset = data.lastDailyReset || Date.now();
-                totalCaught = data.totalCaught || 0;
-                totalEarned = data.totalEarned || 0;
+                costs = data.costs || { radius: 50, children: 80, speed: 60 };
+
+                console.log('📂 Загружено сохранение от:', new Date(data.timestamp).toLocaleString());
+                console.log('   ⭐ Азотиков:', azotiki);
+                console.log('   🏆 Счёт:', score);
+                console.log('   📏 Радиус:', catchRadius);
+                console.log('   👶 Детей:', maxChildren);
+                console.log('   ⚡ Скорость:', speedLevel);
                 
-                if (data.soundEnabled !== undefined) {
-                    soundManager.soundEnabled = data.soundEnabled;
-                }
-                if (data.musicEnabled !== undefined) {
-                    soundManager.musicEnabled = data.musicEnabled;
-                    if (soundManager.musicEnabled) {
-                        setTimeout(() => soundManager.startMusic(), 1000);
-                    }
-                }
-                
-                checkDailyReset();
                 return true;
             } catch (e) {
+                console.warn('Не удалось загрузить сохранение:', e);
                 return false;
             }
         }
 
+        function resetProgress() {
+            if (confirm('⚠️ Вы уверены, что хотите сбросить весь прогресс?')) {
+                localStorage.removeItem(SAVE_KEY);
+                // Сбрасываем игровые переменные
+                score = 0;
+                azotiki = 0;
+                catchRadius = 30;
+                maxChildren = 5;
+                speedLevel = 1;
+                costs = { radius: 50, children: 80, speed: 60 };
+                
+                // Пересоздаём детей
+                children = [];
+                spawnChildren();
+                updateUI();
+                showNotification('🗑️ Прогресс сброшен!');
+                saveGame();
+            }
+        }
+
+        // --- Автосохранение каждые 5 секунд ---
+        setInterval(() => {
+            saveGame();
+        }, 5000);
+
+        // --- Сохраняем при закрытии страницы ---
+        window.addEventListener('beforeunload', () => {
+            saveGame();
+        });
+
+        // --- Сохраняем при сворачивании (для мобильных) ---
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                saveGame();
+            }
+        });
+
         // =====================================================
-        // ===== ПЕРЕМЕННЫЕ ИГРЫ =====
+        // ===== ИГРОВЫЕ ПЕРЕМЕННЫЕ =====
         // =====================================================
         let score = 0;
         let azotiki = 0;
-        let cups = 0;
-        let multiplier = 1;
-        let multiplierLevel = 1;
         let catchRadius = 30;
         let maxChildren = 5;
         let speedLevel = 1;
         let children = [];
         let spawnTimer = 0;
+        let gameRunning = true;
         let animationId = null;
-        let bossCooldown = 3600;
-        let lastBossTime = 0;
-        let ownedThemes = [];
-        let ownedSkins = [];
-        let activeTheme = 0;
-        let activeSkin = 0;
-        let dailyTasks = [];
-        let lastDailyReset = Date.now();
-        let totalCaught = 0;
-        let totalEarned = 0;
+        let gameLoaded = false;
 
+        // Цены улучшений
         let costs = {
             radius: 50,
             children: 80,
-            speed: 60,
-            multiplier: 50
-        };
-
-        // Цены VIP
-        const vipPrices = {
-            theme1: 100,
-            theme2: 200,
-            skin1: 150,
-            skin2: 250
+            speed: 60
         };
 
         // --- Canvas ---
@@ -1074,30 +592,12 @@
         window.addEventListener('resize', resizeCanvas);
 
         // --- Элементы UI ---
+        const scoreEl = document.getElementById('score');
         const azotikiEl = document.getElementById('azotiki');
-        const cupsEl = document.getElementById('cups');
-        const multiplierEl = document.getElementById('multiplier');
         const shopAzotikiEl = document.getElementById('shopAzotiki');
-        const shopCupsEl = document.getElementById('shopCups');
-        const shopMultiplierEl = document.getElementById('shopMultiplier');
         const shopModal = document.getElementById('shopModal');
-        const profileModal = document.getElementById('profileModal');
         const notification = document.getElementById('notification');
         let notificationTimeout = null;
-
-        // --- Фоны ---
-        const themes = {
-            0: { name: 'Классический', bg: ['#87CEEB', '#4A90D9'] },
-            1: { name: 'Закатный', bg: ['#FF6B6B', '#FFA502'] },
-            2: { name: 'Ночной', bg: ['#1a1a2e', '#16213e'] }
-        };
-
-        // --- Скины детей ---
-        const skins = {
-            0: { name: 'Классический', emoji: '👶' },
-            1: { name: 'Робот', emoji: '🤖' },
-            2: { name: 'Инопланетянин', emoji: '👾' }
-        };
 
         // --- Класс ребёнка ---
         class Child {
@@ -1108,10 +608,9 @@
                 this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
                 this.speedX = (Math.random() - 0.5) * maxSpeed * 2;
                 this.speedY = (Math.random() - 0.5) * maxSpeed * 2;
+                this.color = this.randomColor();
                 this.names = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля', 'Дима', 'Катя', 'Серёжа', 'Таня', 'Миша', 'Лена', 'Вова'];
                 this.name = this.names[Math.floor(Math.random() * this.names.length)];
-                this.skinType = activeSkin;
-                this.emoji = skins[activeSkin]?.emoji || '👶';
             }
 
             randomColor() {
@@ -1132,31 +631,16 @@
             }
 
             draw(ctx) {
-                if (activeSkin > 0 && this.emoji) {
-                    ctx.font = `${this.radius * 2}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(this.emoji, this.x, this.y);
-                    
-                    ctx.fillStyle = '#2d3436';
-                    ctx.font = '11px Arial';
-                    ctx.textBaseline = 'bottom';
-                    ctx.shadowColor = 'rgba(255,255,255,0.5)';
-                    ctx.shadowBlur = 4;
-                    ctx.fillText(this.name, this.x, this.y + this.radius + 14);
-                    ctx.shadowBlur = 0;
-                    return;
-                }
-
-                const color = this.randomColor();
+                // Тело
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = color;
+                ctx.fillStyle = this.color;
                 ctx.fill();
                 ctx.strokeStyle = '#2d3436';
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
+                // Глаза
                 ctx.fillStyle = '#2d3436';
                 ctx.beginPath();
                 ctx.arc(this.x - 6, this.y - 4, 3, 0, Math.PI * 2);
@@ -1165,18 +649,18 @@
                 ctx.arc(this.x + 6, this.y - 4, 3, 0, Math.PI * 2);
                 ctx.fill();
 
+                // Улыбка
                 ctx.beginPath();
                 ctx.arc(this.x, this.y + 2, 8, 0.1, Math.PI - 0.1);
                 ctx.stroke();
 
+                // Имя
                 ctx.fillStyle = '#2d3436';
-                ctx.font = '11px Arial';
+                ctx.font = '12px Arial';
                 ctx.textAlign = 'center';
-                ctx.shadowColor = 'rgba(255,255,255,0.5)';
-                ctx.shadowBlur = 4;
-                ctx.fillText(this.name, this.x, this.y + this.radius + 14);
-                ctx.shadowBlur = 0;
+                ctx.fillText(this.name, this.x, this.y + this.radius + 16);
 
+                // Блики
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.beginPath();
                 ctx.arc(this.x - 5, this.y - 7, 4, 0, Math.PI * 2);
@@ -1202,10 +686,12 @@
             notification.style.background = isGood ? 'rgba(46, 213, 115, 0.9)' : 'rgba(255, 71, 87, 0.9)';
             notification.classList.remove('hidden');
             
-            if (notificationTimeout) clearTimeout(notificationTimeout);
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
             notificationTimeout = setTimeout(() => {
                 notification.classList.add('hidden');
-            }, 2000);
+            }, 1500);
         }
 
         function showCatchEffect(x, y) {
@@ -1219,208 +705,57 @@
             effect.style.border = '3px solid #FFD700';
             effect.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6)';
             document.body.appendChild(effect);
-            setTimeout(() => effect.remove(), 600);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 600);
         }
 
         function updateUI() {
+            scoreEl.textContent = score;
             azotikiEl.textContent = azotiki;
-            cupsEl.textContent = cups;
-            multiplierEl.textContent = 'x' + multiplier;
             shopAzotikiEl.textContent = azotiki;
-            shopCupsEl.textContent = cups;
-            shopMultiplierEl.textContent = multiplier;
-            
             document.getElementById('radiusLevel').textContent = catchRadius;
             document.getElementById('childrenLevel').textContent = maxChildren;
             document.getElementById('speedLevel').textContent = speedLevel;
-            document.getElementById('multiplierLevel').textContent = multiplierLevel;
             
+            // Обновляем кнопки магазина
             document.getElementById('buyRadius').disabled = azotiki < costs.radius;
             document.getElementById('buyChildren').disabled = azotiki < costs.children;
             document.getElementById('buySpeed').disabled = azotiki < costs.speed;
             
-            // ВАЖНО: проверяем кубки для множителя
-            const multiplierBtn = document.getElementById('buyMultiplier');
-            multiplierBtn.disabled = cups < costs.multiplier;
-            
             document.querySelector('#buyRadius .cost').textContent = costs.radius;
             document.querySelector('#buyChildren .cost').textContent = costs.children;
             document.querySelector('#buySpeed .cost').textContent = costs.speed;
-            document.querySelector('#buyMultiplier .cost').textContent = costs.multiplier;
-
-            document.querySelectorAll('.vip-buy').forEach(btn => {
-                const type = btn.dataset.type;
-                const id = parseInt(btn.dataset.id);
-                if (type === 'theme') {
-                    btn.disabled = ownedThemes.includes(id);
-                } else if (type === 'skin') {
-                    btn.disabled = ownedSkins.includes(id);
-                }
-            });
-
-            updateBackground();
-            updateProfileUI();
         }
 
-        function updateProfileUI() {
-            document.getElementById('profileAzotiki').textContent = azotiki;
-            document.getElementById('profileCups').textContent = cups;
-            document.getElementById('profileMultiplier').textContent = multiplier;
-            document.getElementById('totalCaught').textContent = totalCaught;
-            document.getElementById('totalEarned').textContent = totalEarned;
-            
-            const soundBtn = document.getElementById('soundToggle');
-            soundBtn.textContent = soundManager.soundEnabled ? 'Вкл' : 'Выкл';
-            soundBtn.className = 'toggle-btn ' + (soundManager.soundEnabled ? 'on' : 'off');
-            
-            const musicBtn = document.getElementById('musicToggle');
-            musicBtn.textContent = soundManager.musicEnabled ? 'Вкл' : 'Выкл';
-            musicBtn.className = 'toggle-btn ' + (soundManager.musicEnabled ? 'on' : 'off');
-        }
+        // --- Игровой цикл ---
+        function gameLoop() {
+            // Очистка
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        function updateBackground() {
-            const theme = themes[activeTheme] || themes[0];
-            canvas.style.background = `radial-gradient(ellipse at center, ${theme.bg[0]} 0%, ${theme.bg[1]} 100%)`;
-        }
-
-        // --- Ежедневные задания ---
-        function generateDailyTasks() {
-            return [
-                { id: 1, name: 'Поймать 10 детей', target: 10, progress: 0, reward: 20, claimed: false },
-                { id: 2, name: 'Поймать 25 детей', target: 25, progress: 0, reward: 50, claimed: false },
-                { id: 3, name: 'Поймать 50 детей', target: 50, progress: 0, reward: 100, claimed: false },
-                { id: 4, name: 'Заработать 100 Азотиков', target: 100, progress: 0, reward: 30, claimed: false },
-                { id: 5, name: 'Заработать 250 Азотиков', target: 250, progress: 0, reward: 75, claimed: false }
-            ];
-        }
-
-        function checkDailyReset() {
-            const now = Date.now();
-            if (now - lastDailyReset > 86400000) {
-                dailyTasks = generateDailyTasks();
-                lastDailyReset = now;
-                saveGame();
-            }
-        }
-
-        function renderDailyTasks() {
-            const container = document.getElementById('dailyTasks');
-            container.innerHTML = '';
-            
-            dailyTasks.forEach(task => {
-                const div = document.createElement('div');
-                div.className = 'daily-task';
-                const completed = task.progress >= task.target;
-                div.innerHTML = `
-                    <div class="task-info">
-                        <div class="task-name">${task.name}</div>
-                        <div class="task-progress">${Math.min(task.progress, task.target)}/${task.target}</div>
-                    </div>
-                    <div style="display:flex;align-items:center;gap:6px;">
-                        <span class="task-reward">+${task.reward} 🏆</span>
-                        <button class="claim-btn" ${task.claimed || !completed ? 'disabled' : ''} data-task="${task.id}">
-                            ${task.claimed ? '✅' : completed ? 'Забрать' : '⏳'}
-                        </button>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-
-            container.querySelectorAll('.claim-btn').forEach(btn => {
-                if (!btn.disabled) {
-                    btn.addEventListener('click', function() {
-                        const taskId = parseInt(this.dataset.task);
-                        const task = dailyTasks.find(t => t.id === taskId);
-                        if (task && task.progress >= task.target && !task.claimed) {
-                            task.claimed = true;
-                            cups += task.reward;
-                            showNotification(`🎉 Получено ${task.reward} 🏆!`);
-                            updateUI();
-                            saveGame();
-                            renderDailyTasks();
-                        }
-                    });
-                }
-            });
-        }
-
-        // --- Босс ---
-        function spawnBoss() {
-            const now = Date.now();
-            const timeSinceLastBoss = (now - lastBossTime) / 1000;
-
-            if (azotiki < 50000) {
-                showNotification('❌ У вас недостаточно Азотиков! Нужно 50,000 ⭐', false);
-                return;
+            // Спавн детей
+            spawnTimer++;
+            if (spawnTimer > 30 && children.length < maxChildren) {
+                children.push(new Child());
+                spawnTimer = 0;
             }
 
-            if (timeSinceLastBoss < bossCooldown) {
-                const remaining = Math.floor(bossCooldown - timeSinceLastBoss);
-                const minutes = Math.floor(remaining / 60);
-                const seconds = remaining % 60;
-                showNotification(`⏳ Босс доступен через ${minutes}м ${seconds}с`, false);
-                return;
+            // Обновление и рисование детей
+            for (let i = children.length - 1; i >= 0; i--) {
+                const child = children[i];
+                child.move();
+                child.draw(ctx);
             }
 
-            azotiki -= 50000;
-            const bossReward = Math.floor(1000 + Math.random() * 2000);
-            cups += bossReward;
-            lastBossTime = now;
+            // Подсказка
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('👆 Лови детей!', canvas.width / 2, canvas.height - 30);
 
-            const bossEl = document.createElement('div');
-            bossEl.className = 'boss-notification';
-            bossEl.textContent = '👾 БОСС ПОБЕЖДЕН! +' + bossReward + ' 🏆';
-            document.body.appendChild(bossEl);
-            setTimeout(() => bossEl.remove(), 3000);
-
-            showNotification(`👾 Босс побежден! +${bossReward} 🏆`);
             updateUI();
-            saveGame();
-            updateBossButton();
-        }
-
-        function updateBossButton() {
-            const now = Date.now();
-            const timeSinceLastBoss = (now - lastBossTime) / 1000;
-            const remaining = Math.max(0, bossCooldown - timeSinceLastBoss);
-            
-            const btn = document.getElementById('bossBtn');
-            if (remaining > 0) {
-                const minutes = Math.floor(remaining / 60);
-                btn.textContent = `⏳${minutes}m`;
-                btn.style.opacity = '0.5';
-            } else {
-                btn.textContent = '👾';
-                btn.style.opacity = '1';
-            }
-        }
-
-        // --- Перерождение ---
-        function doRebirth() {
-            if (azotiki < 1000000) {
-                showNotification(`❌ Нужно 1,000,000 ⭐ для перерождения! (У вас ${azotiki})`, false);
-                return;
-            }
-
-            if (!confirm(`🔄 Перерождение за 1,000,000 ⭐!\nТекущий множитель: x${multiplier}\nПосле перерождения множитель станет x${multiplier * 2}\nПродолжить?`)) {
-                return;
-            }
-
-            azotiki -= 1000000;
-            multiplier *= 2;
-            
-            catchRadius = 30;
-            maxChildren = 5;
-            speedLevel = 1;
-            multiplierLevel = 1;
-            costs = { radius: 50, children: 80, speed: 60, multiplier: 50 };
-            
-            children = [];
-            spawnChildren();
-
-            showNotification(`✨ Перерождение! Множитель теперь x${multiplier}!`);
-            updateUI();
-            saveGame();
+            animationId = requestAnimationFrame(gameLoop);
         }
 
         // --- Обработка кликов ---
@@ -1448,33 +783,17 @@
                 if (children[i].isClicked(x, y)) {
                     const caughtChild = children[i];
                     children.splice(i, 1);
-                    const reward = Math.floor(1 * multiplier);
-                    azotiki += reward;
                     score++;
-                    totalCaught++;
-                    totalEarned += reward;
-                    
-                    soundManager.playCatchSound();
-                    
-                    dailyTasks.forEach(task => {
-                        if (!task.claimed && task.progress < task.target) {
-                            if (task.name.includes('Поймать')) {
-                                task.progress++;
-                            }
-                            if (task.name.includes('Азотиков')) {
-                                task.progress += reward;
-                            }
-                        }
-                    });
-
+                    azotiki += 5;
                     showCatchEffect(clientX, clientY);
-                    showNotification(`🎉 +${reward} ⭐ (x${multiplier})`);
+                    showNotification(`🎉 Поймал ${caughtChild.name}! +5 ⭐`);
                     
                     if (children.length < maxChildren) {
                         children.push(new Child());
                     }
                     
                     caught = true;
+                    // Сохраняем сразу после ловли
                     saveGame();
                     break;
                 }
@@ -1485,32 +804,6 @@
             }
             
             updateUI();
-            renderDailyTasks();
-        }
-
-        // --- Игровой цикл ---
-        function gameLoop() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            spawnTimer++;
-            if (spawnTimer > 30 && children.length < maxChildren) {
-                children.push(new Child());
-                spawnTimer = 0;
-            }
-
-            for (let i = children.length - 1; i >= 0; i--) {
-                children[i].move();
-                children[i].draw(ctx);
-            }
-
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            ctx.font = '13px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('👆 Лови детей!', canvas.width / 2, canvas.height - 25);
-
-            updateUI();
-            updateBossButton();
-            animationId = requestAnimationFrame(gameLoop);
         }
 
         // --- События ---
@@ -1520,7 +813,6 @@
         // --- Магазин ---
         document.getElementById('shopBtn').addEventListener('click', () => {
             shopModal.classList.remove('hidden');
-            renderDailyTasks();
             updateUI();
         });
 
@@ -1536,42 +828,13 @@
             }
         });
 
-        // --- Профиль ---
-        document.getElementById('profileBtn').addEventListener('click', () => {
-            profileModal.classList.remove('hidden');
-            updateUI();
-        });
-
-        document.getElementById('closeProfile').addEventListener('click', () => {
-            profileModal.classList.add('hidden');
-            saveGame();
-        });
-
-        profileModal.addEventListener('click', (e) => {
-            if (e.target === profileModal) {
-                profileModal.classList.add('hidden');
-                saveGame();
-            }
-        });
-
-        // --- Табы ---
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                document.getElementById('tab-' + this.dataset.tab).classList.add('active');
-                if (this.dataset.tab === 'daily') renderDailyTasks();
-            });
-        });
-
         // --- Улучшения ---
         document.getElementById('buyRadius').addEventListener('click', () => {
             if (azotiki >= costs.radius) {
                 azotiki -= costs.radius;
                 catchRadius += 5;
                 costs.radius += 30;
-                showNotification('📏 Радиус увеличен!');
+                showNotification('📏 Радиус увеличен до ' + catchRadius + 'px!');
                 updateUI();
                 saveGame();
             } else {
@@ -1584,7 +847,7 @@
                 azotiki -= costs.children;
                 maxChildren += 1;
                 costs.children += 40;
-                showNotification('👨‍👩‍👧‍👦 Детей стало больше!');
+                showNotification('👨‍👩‍👧‍👦 Детей стало больше! (' + maxChildren + ')');
                 spawnChildren();
                 updateUI();
                 saveGame();
@@ -1598,7 +861,8 @@
                 azotiki -= costs.speed;
                 speedLevel += 1;
                 costs.speed += 30;
-                showNotification('⚡ Дети стали быстрее!');
+                showNotification('⚡ Дети стали быстрее! (уровень ' + speedLevel + ')');
+                // Обновляем скорость у всех детей
                 const maxSpeed = 2 + speedLevel * 0.5;
                 children.forEach(child => {
                     const currentSpeed = Math.sqrt(child.speedX * child.speedX + child.speedY * child.speedY);
@@ -1615,136 +879,39 @@
             }
         });
 
-        // --- Множитель (покупка за кубки) ---
-        document.getElementById('buyMultiplier').addEventListener('click', function() {
-            // Проверяем достаточно ли кубков
-            if (cups >= costs.multiplier) {
-                // Списываем кубки
-                cups -= costs.multiplier;
-                // Увеличиваем множитель
-                multiplierLevel += 1;
-                multiplier += 1;
-                // Увеличиваем цену на 50%
-                costs.multiplier = Math.floor(costs.multiplier * 1.5);
-                showNotification(`✨ Множитель теперь x${multiplier}!`);
-                updateUI();
-                saveGame();
-            } else {
-                showNotification(`❌ Не хватает Кубков! Нужно ${costs.multiplier} 🏆`, false);
-            }
+        // --- Сброс прогресса ---
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            resetProgress();
         });
 
-        // --- VIP покупки ---
-        document.querySelectorAll('.vip-buy').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const type = this.dataset.type;
-                const id = parseInt(this.dataset.id);
-                let price = 0;
-                let key = '';
-
-                if (type === 'theme') {
-                    key = 'theme' + id;
-                    price = vipPrices[key];
-                    if (ownedThemes.includes(id)) {
-                        activeTheme = id;
-                        showNotification('🎨 Тема применена!');
-                        updateUI();
-                        saveGame();
-                        return;
-                    }
-                } else if (type === 'skin') {
-                    key = 'skin' + id;
-                    price = vipPrices[key];
-                    if (ownedSkins.includes(id)) {
-                        activeSkin = id;
-                        showNotification('👾 Скин применён!');
-                        children = [];
-                        spawnChildren();
-                        updateUI();
-                        saveGame();
-                        return;
-                    }
-                }
-
-                if (cups < price) {
-                    showNotification(`❌ Нужно ${price} 🏆!`, false);
-                    return;
-                }
-
-                cups -= price;
-                if (type === 'theme') {
-                    ownedThemes.push(id);
-                    activeTheme = id;
-                    showNotification('🎨 Тема куплена!');
-                } else if (type === 'skin') {
-                    ownedSkins.push(id);
-                    activeSkin = id;
-                    showNotification('👾 Скин куплен!');
-                    children = [];
-                    spawnChildren();
-                }
-
-                updateUI();
-                saveGame();
-                renderDailyTasks();
-            });
-        });
-
-        // --- Звук и музыка в профиле ---
-        document.getElementById('soundToggle').addEventListener('click', function() {
-            const enabled = soundManager.toggleSound();
-            this.textContent = enabled ? 'Вкл' : 'Выкл';
-            this.className = 'toggle-btn ' + (enabled ? 'on' : 'off');
-            showNotification(enabled ? '🔊 Звуки включены' : '🔇 Звуки выключены');
-            saveGame();
-        });
-
-        document.getElementById('musicToggle').addEventListener('click', function() {
-            const enabled = soundManager.toggleMusic();
-            this.textContent = enabled ? 'Вкл' : 'Выкл';
-            this.className = 'toggle-btn ' + (enabled ? 'on' : 'off');
-            showNotification(enabled ? '🎵 Музыка включена' : '🎵 Музыка выключена');
-            saveGame();
-        });
-
-        // --- Босс ---
-        document.getElementById('bossBtn').addEventListener('click', spawnBoss);
-
-        // --- Перерождение ---
-        document.getElementById('rebirthBtn').addEventListener('click', doRebirth);
-
-        // --- Техподдержка ---
-        document.getElementById('supportBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            window.open('https://t.me/Dmitriymikha', '_blank');
-        });
-
-        // --- Автосохранение ---
-        setInterval(saveGame, 5000);
-        window.addEventListener('beforeunload', saveGame);
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) saveGame();
+        document.getElementById('resetProgressBtn').addEventListener('click', () => {
+            resetProgress();
+            shopModal.classList.add('hidden');
         });
 
         // =====================================================
-        // ===== ЗАПУСК =====
+        // ===== ЗАПУСК ИГРЫ =====
         // =====================================================
+        
+        // Загружаем сохранение
         loadGame();
+        
+        // Создаём детей
         spawnChildren();
+        
+        // Обновляем UI
         updateUI();
-        updateBossButton();
+        
+        // Запускаем игровой цикл
         gameLoop();
-        renderDailyTasks();
+        
+        // Сохраняем после запуска
+        setTimeout(saveGame, 1000);
 
-        if (soundManager.musicEnabled) {
-            setTimeout(() => soundManager.startMusic(), 1500);
-        }
-
-        console.log('🏕️ Лагерь Звёздный запущен!');
+        console.log('🏕️ Игра "Лагерь Звёздный" запущена!');
+        console.log('👶 Детей на экране:', children.length);
         console.log('⭐ Азотиков:', azotiki);
-        console.log('🏆 Кубков:', cups);
-        console.log('✨ Множитель: x' + multiplier);
-        console.log('📩 Поддержка: @Dmitriymikha');
+        console.log('💾 Автосохранение каждые 5 секунд');
     </script>
 </body>
 </html>
