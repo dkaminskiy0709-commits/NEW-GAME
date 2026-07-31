@@ -1,258 +1,749 @@
-import pygame
-import random
-import sys
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>🏕️ Лагерь Звёздный</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-# Инициализация
-pygame.init()
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            user-select: none;
+        }
 
-# Размеры окна
-WIDTH = 800
-HEIGHT = 600
-FPS = 60
+        #app {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-# Цвета
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 50, 50)
-GREEN = (0, 200, 0)
-BLUE = (50, 150, 255)
-YELLOW = (255, 255, 0)
-PURPLE = (200, 50, 200)
-ORANGE = (255, 150, 50)
-LIGHT_BLUE = (100, 200, 255)
-GRAY = (100, 100, 100)
-DARK_GRAY = (50, 50, 50)
-GOLD = (255, 215, 0)
+        /* Верхняя панель */
+        #topPanel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
 
-# Создаём окно
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("🏕️ Лагерь 'Звёздный' - Лови детей!")
-clock = pygame.time.Clock()
-font = pygame.font.Font(None, 36)
-font_small = pygame.font.Font(None, 28)
+        .btn-shop {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 22px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-# Класс ребёнка
-class Child:
-    def __init__(self):
-        self.radius = 20
-        self.x = random.randint(self.radius, WIDTH - self.radius)
-        self.y = random.randint(self.radius, HEIGHT - self.radius)
-        self.color = random.choice([RED, YELLOW, BLUE, PURPLE, ORANGE, LIGHT_BLUE])
-        self.speed_x = random.choice([-3, -2, 2, 3])
-        self.speed_y = random.choice([-3, -2, 2, 3])
-        self.names = ["Аня", "Петя", "Маша", "Коля", "Оля", "Дима", "Катя", "Серёжа", "Таня", "Миша"]
-        self.name = random.choice(self.names)
-        self.caught = False
+        .btn-shop:active {
+            transform: scale(0.9);
+        }
 
-    def move(self):
-        self.x += self.speed_x
-        self.y += self.speed_y
-        
-        # Отскок от стен
-        if self.x - self.radius <= 0 or self.x + self.radius >= WIDTH:
-            self.speed_x = -self.speed_x
-        if self.y - self.radius <= 0 or self.y + self.radius >= HEIGHT:
-            self.speed_y = -self.speed_y
+        #stats {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
 
-    def draw(self, surface):
-        # Тело
-        pygame.draw.circle(surface, self.color, (int(self.x), int(self.y)), self.radius)
-        pygame.draw.circle(surface, BLACK, (int(self.x), int(self.y)), self.radius, 2)
-        
-        # Глаза
-        pygame.draw.circle(surface, BLACK, (int(self.x - 7), int(self.y - 5)), 3)
-        pygame.draw.circle(surface, BLACK, (int(self.x + 7), int(self.y - 5)), 3)
-        
-        # Улыбка
-        pygame.draw.arc(surface, BLACK, (int(self.x - 8), int(self.y - 5), 16, 12), 0.1, 3.0, 2)
-        
-        # Имя
-        name_text = font_small.render(self.name, True, BLACK)
-        surface.blit(name_text, (int(self.x - name_text.get_width() // 2), int(self.y + self.radius + 5)))
+        .stat-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            backdrop-filter: blur(5px);
+        }
 
-    def get_rect(self):
-        return pygame.Rect(self.x - self.radius, self.y - self.radius, self.radius * 2, self.radius * 2)
+        .stat-item .icon {
+            font-size: 18px;
+        }
 
-# Класс кнопки
-class Button:
-    def __init__(self, x, y, width, height, text, color, text_color=BLACK):
-        self.rect = pygame.Rect(x, y, width, height)
-        self.text = text
-        self.color = color
-        self.text_color = text_color
-        self.hovered = False
+        /* Игровое поле */
+        #gameCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(ellipse at center, #87CEEB 0%, #4A90D9 100%);
+            cursor: pointer;
+            touch-action: none;
+        }
 
-    def draw(self, surface):
-        color = self.color
-        if self.hovered:
-            color = tuple(min(c + 30, 255) for c in self.color)
-        
-        pygame.draw.rect(surface, color, self.rect)
-        pygame.draw.rect(surface, BLACK, self.rect, 2)
-        
-        text_surf = font_small.render(self.text, True, self.text_color)
-        text_rect = text_surf.get_rect(center=self.rect.center)
-        surface.blit(text_surf, text_rect)
+        /* Модальное окно */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            animation: fadeIn 0.3s ease;
+        }
 
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEMOTION:
-            self.hovered = self.rect.collidepoint(event.pos)
-            return False
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.rect.collidepoint(event.pos):
-                return True
-        return False
+        .modal.hidden {
+            display: none;
+        }
 
-# Основная функция
-def main():
-    # Игровые переменные
-    children = []
-    score = 0
-    azotiki = 0
-    catch_radius = 30
-    max_children = 5
-    spawn_timer = 0
-    show_shop = False
-    game_running = True
-    
-    # Улучшения
-    radius_level = 1
-    max_children_level = 1
-    radius_cost = 50
-    max_children_cost = 80
-    
-    # Создаём начальных детей
-    for _ in range(max_children):
-        children.append(Child())
-    
-    # Кнопки
-    btn_shop = Button(10, 10, 120, 40, "🛒 Магазин", GREEN)
-    btn_close = Button(WIDTH - 150, 10, 130, 40, "❌ Закрыть", RED)
-    btn_radius = Button(100, 150, 300, 60, f"📏 Радиус ({radius_cost} ⭐)", BLUE)
-    btn_max = Button(100, 240, 300, 60, f"👨‍👩‍👧‍👦 Дети ({max_children_cost} ⭐)", ORANGE)
-    
-    # Главный цикл
-    running = True
-    while running:
-        screen.fill(WHITE)
-        
-        # Обработка событий
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h2 {
+            font-size: 22px;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #999;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+
+        .close-btn:active {
+            color: #333;
+        }
+
+        .balance {
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .upgrade-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .upgrade-item {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.2s;
+        }
+
+        .upgrade-item:active {
+            transform: scale(0.98);
+        }
+
+        .upgrade-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .upgrade-icon {
+            font-size: 28px;
+        }
+
+        .upgrade-title {
+            font-weight: bold;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .upgrade-desc {
+            font-size: 13px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .buy-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .buy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .buy-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .buy-btn .cost {
+            color: #FFD700;
+        }
+
+        /* Уведомление */
+        .notification {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            animation: slideDown 0.5s ease;
+            text-align: center;
+            max-width: 80%;
+            pointer-events: none;
+        }
+
+        .notification.hidden {
+            display: none;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Эффект ловли */
+        .catch-effect {
+            position: fixed;
+            pointer-events: none;
+            z-index: 20;
+            animation: popEffect 0.6s ease forwards;
+        }
+
+        @keyframes popEffect {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 480px) {
+            .stat-item {
+                font-size: 14px;
+                padding: 4px 10px;
+            }
+            .btn-shop {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
+            .modal-content {
+                padding: 16px;
+            }
+            .upgrade-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .buy-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Верхняя панель -->
+        <div id="topPanel">
+            <button id="shopBtn" class="btn-shop">🛒</button>
+            <div id="stats">
+                <div class="stat-item">
+                    <span class="icon">🏆</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="icon">⭐</span>
+                    <span id="azotiki">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Игровое поле -->
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Магазин -->
+        <div id="shopModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>🏪 Магазин улучшений</h2>
+                    <button id="closeShop" class="close-btn">✕</button>
+                </div>
+                
+                <div class="balance">
+                    ⭐ Баланс: <span id="shopAzotiki">0</span>
+                </div>
+
+                <div class="upgrade-list">
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <span class="upgrade-icon">📏</span>
+                            <div>
+                                <div class="upgrade-title">Увеличение радиуса</div>
+                                <div class="upgrade-desc">Текущий: <span id="radiusLevel">30</span>px</div>
+                            </div>
+                        </div>
+                        <button class="buy-btn" id="buyRadius">
+                            Купить за <span class="cost">50</span> ⭐
+                        </button>
+                    </div>
+
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <span class="upgrade-icon">👨‍👩‍👧</span>
+                            <div>
+                                <div class="upgrade-title">Больше детей</div>
+                                <div class="upgrade-desc">Текущий: <span id="childrenLevel">5</span></div>
+                            </div>
+                        </div>
+                        <button class="buy-btn" id="buyChildren">
+                            Купить за <span class="cost">80</span> ⭐
+                        </button>
+                    </div>
+
+                    <div class="upgrade-item">
+                        <div class="upgrade-info">
+                            <span class="upgrade-icon">⚡</span>
+                            <div>
+                                <div class="upgrade-title">Скорость детей</div>
+                                <div class="upgrade-desc">Текущий: <span id="speedLevel">1</span></div>
+                            </div>
+                        </div>
+                        <button class="buy-btn" id="buySpeed">
+                            Купить за <span class="cost">60</span> ⭐
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Уведомление -->
+        <div id="notification" class="notification hidden"></div>
+    </div>
+
+    <!-- Подключаем Telegram WebApp -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <script>
+        // --- Telegram WebApp инициализация ---
+        let tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.enableClosingConfirmation();
+        }
+
+        // --- Игровые переменные ---
+        let score = 0;
+        let azotiki = 0;
+        let catchRadius = 30;
+        let maxChildren = 5;
+        let speedLevel = 1;
+        let children = [];
+        let spawnTimer = 0;
+        let gameRunning = true;
+        let animationId = null;
+
+        // Цены улучшений
+        let costs = {
+            radius: 50,
+            children: 80,
+            speed: 60
+        };
+
+        // --- Canvas ---
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- Элементы UI ---
+        const scoreEl = document.getElementById('score');
+        const azotikiEl = document.getElementById('azotiki');
+        const shopAzotikiEl = document.getElementById('shopAzotiki');
+        const shopModal = document.getElementById('shopModal');
+        const notification = document.getElementById('notification');
+        let notificationTimeout = null;
+
+        // --- Класс ребёнка ---
+        class Child {
+            constructor() {
+                this.radius = 18;
+                const maxSpeed = 2 + speedLevel * 0.5;
+                this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
+                this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
+                this.speedX = (Math.random() - 0.5) * maxSpeed * 2;
+                this.speedY = (Math.random() - 0.5) * maxSpeed * 2;
+                this.color = this.randomColor();
+                this.names = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля', 'Дима', 'Катя', 'Серёжа', 'Таня', 'Миша', 'Лена', 'Вова'];
+                this.name = this.names[Math.floor(Math.random() * this.names.length)];
+            }
+
+            randomColor() {
+                const colors = ['#FF4757', '#FF6B81', '#FFA502', '#2ED573', '#1E90FF', '#A29BFE', '#FD79A8', '#00CEC9', '#F368E0', '#FF9FF3'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            move() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) {
+                    this.speedX = -this.speedX;
+                }
+                if (this.y - this.radius <= 0 || this.y + this.radius >= canvas.height) {
+                    this.speedY = -this.speedY;
+                }
+            }
+
+            draw(ctx) {
+                // Тело
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+                ctx.strokeStyle = '#2d3436';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Глаза
+                ctx.fillStyle = '#2d3436';
+                ctx.beginPath();
+                ctx.arc(this.x - 6, this.y - 4, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + 6, this.y - 4, 3, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Улыбка
+                ctx.beginPath();
+                ctx.arc(this.x, this.y + 2, 8, 0.1, Math.PI - 0.1);
+                ctx.stroke();
+
+                // Имя
+                ctx.fillStyle = '#2d3436';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(this.name, this.x, this.y + this.radius + 16);
+
+                // Блики
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x - 5, this.y - 7, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            isClicked(mx, my) {
+                const dx = this.x - mx;
+                const dy = this.y - my;
+                return (dx * dx + dy * dy) <= (catchRadius * catchRadius);
+            }
+        }
+
+        // --- Функции ---
+        function spawnChildren() {
+            while (children.length < maxChildren) {
+                children.push(new Child());
+            }
+        }
+
+        function showNotification(text, isGood = true) {
+            notification.textContent = text;
+            notification.style.background = isGood ? 'rgba(46, 213, 115, 0.9)' : 'rgba(255, 71, 87, 0.9)';
+            notification.classList.remove('hidden');
             
-            # Клик по детям (ловля)
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not show_shop and game_running:
-                    mx, my = event.pos
-                    for child in children[:]:
-                        dist = ((child.x - mx) ** 2 + (child.y - my) ** 2) ** 0.5
-                        if dist <= catch_radius:
-                            children.remove(child)
-                            score += 1
-                            azotiki += 5
-                            # Сразу создаём нового
-                            if len(children) < max_children:
-                                children.append(Child())
-            
-            # Обработка кнопок
-            if show_shop:
-                if btn_close.handle_event(event):
-                    show_shop = False
-                if btn_radius.handle_event(event):
-                    if azotiki >= radius_cost:
-                        azotiki -= radius_cost
-                        catch_radius += 5
-                        radius_level += 1
-                        radius_cost += 30
-                        btn_radius.text = f"📏 Радиус ({radius_cost} ⭐)"
-                if btn_max.handle_event(event):
-                    if azotiki >= max_children_cost:
-                        azotiki -= max_children_cost
-                        max_children += 1
-                        max_children_level += 1
-                        max_children_cost += 40
-                        btn_max.text = f"👨‍👩‍👧‍👦 Дети ({max_children_cost} ⭐)"
-            else:
-                if btn_shop.handle_event(event):
-                    show_shop = True
-        
-        # Обновление игры
-        if not show_shop and game_running:
-            spawn_timer += 1
-            if spawn_timer > 30 and len(children) < max_children:
-                children.append(Child())
-                spawn_timer = 0
-            
-            for child in children:
-                child.move()
-        
-        # Рисование детей
-        for child in children:
-            child.draw(screen)
-        
-        # Рисование интерфейса
-        # Счёт
-        score_text = font.render(f"🏆 Поймано: {score}", True, BLACK)
-        screen.blit(score_text, (WIDTH - 250, 10))
-        
-        azotiki_text = font.render(f"⭐ Азотики: {azotiki}", True, GOLD)
-        screen.blit(azotiki_text, (WIDTH - 250, 50))
-        
-        radius_text = font_small.render(f"🎯 Радиус: {catch_radius}", True, DARK_GRAY)
-        screen.blit(radius_text, (WIDTH - 250, 90))
-        
-        children_text = font_small.render(f"👶 Детей: {len(children)}/{max_children}", True, DARK_GRAY)
-        screen.blit(children_text, (WIDTH - 250, 120))
-        
-        # Кнопка магазина
-        if not show_shop:
-            btn_shop.draw(screen)
-        
-        # Магазин
-        if show_shop:
-            # Затемнение
-            overlay = pygame.Surface((WIDTH, HEIGHT))
-            overlay.set_alpha(180)
-            overlay.fill((0, 0, 0))
-            screen.blit(overlay, (0, 0))
-            
-            # Окно магазина
-            shop_rect = pygame.Rect(150, 80, 500, 400)
-            pygame.draw.rect(screen, WHITE, shop_rect)
-            pygame.draw.rect(screen, BLACK, shop_rect, 3)
-            
-            # Заголовок
-            title = font.render("🏪 МАГАЗИН УЛУЧШЕНИЙ", True, BLACK)
-            screen.blit(title, (shop_rect.centerx - title.get_width() // 2, shop_rect.y + 20))
-            
-            # Баланс в магазине
-            balance = font.render(f"⭐ {azotiki} Азотиков", True, GOLD)
-            screen.blit(balance, (shop_rect.centerx - balance.get_width() // 2, shop_rect.y + 70))
-            
-            # Кнопки улучшений
-            btn_radius.draw(screen)
-            btn_max.draw(screen)
-            
-            # Информация об улучшениях
-            info1 = font_small.render(f"Текущий радиус: {catch_radius} (уровень {radius_level})", True, BLACK)
-            screen.blit(info1, (shop_rect.x + 30, shop_rect.y + 230))
-            
-            info2 = font_small.render(f"Максимум детей: {max_children} (уровень {max_children_level})", True, BLACK)
-            screen.blit(info2, (shop_rect.x + 30, shop_rect.y + 320))
-            
-            # Подсказка
-            hint = font_small.render("💡 Лови детей, чтобы зарабатывать Азотики!", True, GRAY)
-            screen.blit(hint, (shop_rect.centerx - hint.get_width() // 2, shop_rect.y + 370))
-            
-            # Кнопка закрытия
-            btn_close.draw(screen)
-        
-        pygame.display.flip()
-        clock.tick(FPS)
-    
-    pygame.quit()
-    sys.exit()
+            if (notificationTimeout) {
+                clearTimeout(notificationTimeout);
+            }
+            notificationTimeout = setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 1500);
+        }
 
-if __name__ == "__main__":
-    main()
+        function showCatchEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'catch-effect';
+            effect.style.left = x - 30 + 'px';
+            effect.style.top = y - 30 + 'px';
+            effect.style.width = '60px';
+            effect.style.height = '60px';
+            effect.style.borderRadius = '50%';
+            effect.style.border = '3px solid #FFD700';
+            effect.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6)';
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                effect.remove();
+            }, 600);
+        }
+
+        function updateUI() {
+            scoreEl.textContent = score;
+            azotikiEl.textContent = azotiki;
+            shopAzotikiEl.textContent = azotiki;
+            document.getElementById('radiusLevel').textContent = catchRadius;
+            document.getElementById('childrenLevel').textContent = maxChildren;
+            document.getElementById('speedLevel').textContent = speedLevel;
+            
+            // Обновляем кнопки магазина
+            document.getElementById('buyRadius').disabled = azotiki < costs.radius;
+            document.getElementById('buyChildren').disabled = azotiki < costs.children;
+            document.getElementById('buySpeed').disabled = azotiki < costs.speed;
+            
+            document.querySelector('#buyRadius .cost').textContent = costs.radius;
+            document.querySelector('#buyChildren .cost').textContent = costs.children;
+            document.querySelector('#buySpeed .cost').textContent = costs.speed;
+        }
+
+        // --- Игровой цикл ---
+        function gameLoop() {
+            // Очистка
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Спавн детей
+            spawnTimer++;
+            if (spawnTimer > 30 && children.length < maxChildren) {
+                children.push(new Child());
+                spawnTimer = 0;
+            }
+
+            // Обновление и рисование детей
+            for (let i = children.length - 1; i >= 0; i--) {
+                const child = children[i];
+                child.move();
+                child.draw(ctx);
+            }
+
+            // Отображение радиуса ловли (при клике показываем)
+            // Рисуем подсказку
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('👆 Лови детей!', canvas.width / 2, canvas.height - 30);
+
+            updateUI();
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // --- Обработка кликов ---
+        function handleCanvasClick(e) {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            
+            let clientX, clientY;
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+                e.preventDefault();
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            const x = (clientX - rect.left) * scaleX;
+            const y = (clientY - rect.top) * scaleY;
+
+            let caught = false;
+            for (let i = children.length - 1; i >= 0; i--) {
+                if (children[i].isClicked(x, y)) {
+                    const caughtChild = children[i];
+                    children.splice(i, 1);
+                    score++;
+                    azotiki += 5;
+                    showCatchEffect(clientX, clientY);
+                    showNotification(`🎉 Поймал ${caughtChild.name}! +5 ⭐`);
+                    
+                    // Добавляем нового
+                    if (children.length < maxChildren) {
+                        children.push(new Child());
+                    }
+                    
+                    caught = true;
+                    break;
+                }
+            }
+            
+            if (!caught) {
+                // Показать, что промазали
+                showNotification('😅 Мимо!', false);
+            }
+            
+            updateUI();
+        }
+
+        // --- События ---
+        canvas.addEventListener('click', handleCanvasClick);
+        canvas.addEventListener('touchstart', handleCanvasClick, { passive: false });
+
+        // --- Магазин ---
+        document.getElementById('shopBtn').addEventListener('click', () => {
+            shopModal.classList.remove('hidden');
+            updateUI();
+        });
+
+        document.getElementById('closeShop').addEventListener('click', () => {
+            shopModal.classList.add('hidden');
+        });
+
+        shopModal.addEventListener('click', (e) => {
+            if (e.target === shopModal) {
+                shopModal.classList.add('hidden');
+            }
+        });
+
+        // Улучшения
+        document.getElementById('buyRadius').addEventListener('click', () => {
+            if (azotiki >= costs.radius) {
+                azotiki -= costs.radius;
+                catchRadius += 5;
+                costs.radius += 30;
+                showNotification('📏 Радиус увеличен!');
+                updateUI();
+            } else {
+                showNotification('❌ Не хватает Азотиков!', false);
+            }
+        });
+
+        document.getElementById('buyChildren').addEventListener('click', () => {
+            if (azotiki >= costs.children) {
+                azotiki -= costs.children;
+                maxChildren += 1;
+                costs.children += 40;
+                showNotification('👨‍👩‍👧‍👦 Детей стало больше!');
+                spawnChildren();
+                updateUI();
+            } else {
+                showNotification('❌ Не хватает Азотиков!', false);
+            }
+        });
+
+        document.getElementById('buySpeed').addEventListener('click', () => {
+            if (azotiki >= costs.speed) {
+                azotiki -= costs.speed;
+                speedLevel += 1;
+                costs.speed += 30;
+                showNotification('⚡ Дети стали быстрее!');
+                // Обновляем скорость у всех детей
+                const maxSpeed = 2 + speedLevel * 0.5;
+                children.forEach(child => {
+                    const currentSpeed = Math.sqrt(child.speedX * child.speedX + child.speedY * child.speedY);
+                    if (currentSpeed > 0) {
+                        const ratio = maxSpeed / currentSpeed;
+                        child.speedX *= ratio;
+                        child.speedY *= ratio;
+                    }
+                });
+                updateUI();
+            } else {
+                showNotification('❌ Не хватает Азотиков!', false);
+            }
+        });
+
+        // --- Запуск игры ---
+        spawnChildren();
+        updateUI();
+        gameLoop();
+
+        // Обработка изменения размера экрана
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
+
+        // Обработка закрытия
+        window.addEventListener('beforeunload', () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        });
+
+        console.log('🏕️ Игра "Лагерь Звёздный" запущена!');
+        console.log('👶 Детей на экране:', children.length);
+        console.log('⭐ Азотиков:', azotiki);
+    </script>
+</body>
+</html>
