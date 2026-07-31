@@ -27,6 +27,92 @@
             overflow: hidden;
         }
 
+        /* ЗАСТАВКА */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #2d3436, #00b894, #0984e3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: splashFade 2s ease forwards;
+            pointer-events: none;
+        }
+
+        @keyframes splashFade {
+            0% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        #splashScreen.hidden {
+            display: none;
+        }
+
+        #splashTitle {
+            font-size: clamp(60px, 15vw, 160px);
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 60px rgba(255, 215, 0, 0.3), 0 4px 20px rgba(0,0,0,0.3);
+            font-family: 'Arial Black', Arial, sans-serif;
+            letter-spacing: 8px;
+            animation: splashPulse 1.5s ease-in-out infinite;
+            z-index: 1001;
+        }
+
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #splashSub {
+            font-size: clamp(20px, 4vw, 40px);
+            color: white;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+            margin-top: 10px;
+            font-weight: 300;
+            letter-spacing: 4px;
+            z-index: 1001;
+        }
+
+        #splashZubr {
+            font-size: clamp(80px, 20vw, 200px);
+            animation: zubrSplash 1.5s ease-in-out infinite;
+            margin-top: -10px;
+            z-index: 1001;
+            filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.2));
+        }
+
+        #splashZubr .zubr-suit {
+            position: relative;
+            display: inline-block;
+        }
+
+        @keyframes zubrSplash {
+            0%, 100% { transform: translateY(0px) rotate(-2deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+
+        #splashChildren {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            font-size: clamp(30px, 6vw, 60px);
+            z-index: 1001;
+            opacity: 0.6;
+            flex-wrap: wrap;
+            padding: 0 20px;
+        }
+
         /* Верхняя панель */
         #topPanel {
             position: fixed;
@@ -436,11 +522,16 @@
             display: flex;
             flex-direction: column;
             gap: 1px;
+            flex: 1;
         }
 
         .daily-task .task-name {
             font-weight: bold;
             font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .daily-task .task-progress {
@@ -463,6 +554,7 @@
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
+            white-space: nowrap;
         }
 
         .daily-task .claim-btn:disabled {
@@ -476,18 +568,18 @@
         .daily-task.expert { border-left-color: #A29BFE; }
         .daily-task.legendary { border-left-color: #FFD700; }
 
-        .daily-task .difficulty-badge {
+        .difficulty-badge {
             font-size: 9px;
             padding: 1px 8px;
             border-radius: 10px;
             font-weight: bold;
+            white-space: nowrap;
         }
-
-        .daily-task .difficulty-badge.easy { background: #2ED573; color: white; }
-        .daily-task .difficulty-badge.medium { background: #FFA502; color: white; }
-        .daily-task .difficulty-badge.hard { background: #FF4757; color: white; }
-        .daily-task .difficulty-badge.expert { background: #A29BFE; color: white; }
-        .daily-task .difficulty-badge.legendary { background: #FFD700; color: #333; }
+        .difficulty-badge.easy { background: #2ED573; color: white; }
+        .difficulty-badge.medium { background: #FFA502; color: white; }
+        .difficulty-badge.hard { background: #FF4757; color: white; }
+        .difficulty-badge.expert { background: #A29BFE; color: white; }
+        .difficulty-badge.legendary { background: #FFD700; color: #333; }
 
         .vip-item {
             background: linear-gradient(135deg, #FFD700, #FFA500);
@@ -660,11 +752,33 @@
                 flex-wrap: wrap;
                 gap: 4px;
             }
+            .daily-task .task-name {
+                font-size: 11px;
+            }
+            .difficulty-badge {
+                font-size: 8px;
+                padding: 1px 6px;
+            }
         }
     </style>
 </head>
 <body>
     <div id="app">
+        <!-- ЗАСТАВКА ПРИ ВХОДЕ -->
+        <div id="splashScreen">
+            <div id="splashTitle">🏕️ КУПАЛИНКА</div>
+            <div id="splashZubr">🦬</div>
+            <div id="splashSub">Детский лагерь</div>
+            <div id="splashChildren">
+                <span>👧</span>
+                <span>👦</span>
+                <span>🧒</span>
+                <span>👶</span>
+                <span>👧</span>
+                <span>👦</span>
+            </div>
+        </div>
+
         <!-- Фоновый текст и стикер -->
         <div id="backgroundContainer">
             <div id="backgroundText">ВОЛ"Купалинка"</div>
@@ -866,7 +980,7 @@
                         <span style="font-size:24px;">🎵</span>
                         <div>
                             <div class="upgrade-title">Музыка</div>
-                            <div class="upgrade-desc">Короткая прикольная музыка</div>
+                            <div class="upgrade-desc">Энергичная фоновая</div>
                         </div>
                     </div>
                     <button id="musicToggle" class="toggle-btn on">Вкл</button>
@@ -923,7 +1037,7 @@
         }
 
         // =====================================================
-        // ===== ЗВУКИ (КОРОТКАЯ ПРИКОЛЬНАЯ МУЗЫКА) =====
+        // ===== ЗВУКИ (ЭНЕРГИЧНАЯ МУЗЫКА) =====
         // =====================================================
         class SoundManager {
             constructor() {
@@ -962,26 +1076,40 @@
                 } catch (e) {}
             }
 
-            // КОРОТКАЯ ПРИКОЛЬНАЯ МЕЛОДИЯ (4 ноты, как в играх)
+            // ЭНЕРГИЧНАЯ МУЗЫКА (быстрая, весёлая)
             startMusic() {
                 if (!this.musicEnabled || !this.ctx) return;
                 if (this.musicInterval) return;
                 
-                const playFunMelody = () => {
+                const playEnergyMelody = () => {
                     if (!this.musicEnabled) return;
                     
-                    // Весёлая короткая мелодия: 4 ноты
-                    this.playNote(523, 0.12); // До
-                    setTimeout(() => this.playNote(587, 0.12), 150); // Ре
-                    setTimeout(() => this.playNote(659, 0.12), 300); // Ми
-                    setTimeout(() => this.playNote(784, 0.18), 450); // Соль
+                    // Быстрая энергичная мелодия
+                    this.playNote(523, 0.08);
+                    setTimeout(() => this.playNote(659, 0.08), 100);
+                    setTimeout(() => this.playNote(784, 0.08), 200);
+                    setTimeout(() => this.playNote(880, 0.1), 300);
+                    setTimeout(() => this.playNote(784, 0.08), 420);
+                    setTimeout(() => this.playNote(659, 0.08), 520);
+                    setTimeout(() => this.playNote(523, 0.08), 620);
+                    setTimeout(() => this.playNote(659, 0.1), 720);
+                    setTimeout(() => this.playNote(784, 0.08), 840);
+                    setTimeout(() => this.playNote(880, 0.08), 940);
+                    setTimeout(() => this.playNote(988, 0.1), 1040);
+                    setTimeout(() => this.playNote(880, 0.08), 1160);
+                    setTimeout(() => this.playNote(784, 0.08), 1260);
+                    setTimeout(() => this.playNote(659, 0.1), 1360);
+                    
+                    // Басовая линия
+                    this.playNote(110, 0.15);
+                    setTimeout(() => this.playNote(130, 0.15), 300);
+                    setTimeout(() => this.playNote(110, 0.15), 600);
+                    setTimeout(() => this.playNote(130, 0.15), 900);
+                    setTimeout(() => this.playNote(110, 0.15), 1200);
                 };
                 
-                // Запускаем мелодию
-                setTimeout(playFunMelody, 500);
-                
-                // Повторяем каждые 2 секунды
-                this.musicInterval = setInterval(playFunMelody, 2000);
+                setTimeout(playEnergyMelody, 500);
+                this.musicInterval = setInterval(playEnergyMelody, 1600);
             }
 
             playNote(freq, duration) {
@@ -993,7 +1121,7 @@
                     gain.connect(this.ctx.destination);
                     osc.type = 'square';
                     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.07, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
                     osc.start(this.ctx.currentTime);
                     osc.stop(this.ctx.currentTime + duration);
@@ -1098,7 +1226,7 @@
                 if (data.musicEnabled !== undefined) {
                     soundManager.musicEnabled = data.musicEnabled;
                     if (soundManager.musicEnabled) {
-                        setTimeout(() => soundManager.startMusic(), 1000);
+                        setTimeout(() => soundManager.startMusic(), 2000);
                     }
                 }
                 
@@ -1394,25 +1522,25 @@
         // =====================================================
         function generateDailyTasks() {
             return [
-                // Лёгкие (Easy)
+                // Лёгкие (Easy) - 3 задания
                 { id: 1, name: 'Поймать 5 детей', target: 5, progress: 0, reward: 10, difficulty: 'easy', claimed: false },
                 { id: 2, name: 'Поймать 10 детей', target: 10, progress: 0, reward: 20, difficulty: 'easy', claimed: false },
-                { id: 3, name: 'Заработать 50 Азотиков', target: 50, progress: 0, reward: 15, difficulty: 'easy', claimed: false },
+                { id: 3, name: 'Заработать 50 ⭐', target: 50, progress: 0, reward: 15, difficulty: 'easy', claimed: false },
                 
-                // Средние (Medium)
+                // Средние (Medium) - 3 задания
                 { id: 4, name: 'Поймать 25 детей', target: 25, progress: 0, reward: 50, difficulty: 'medium', claimed: false },
-                { id: 5, name: 'Заработать 150 Азотиков', target: 150, progress: 0, reward: 40, difficulty: 'medium', claimed: false },
+                { id: 5, name: 'Заработать 150 ⭐', target: 150, progress: 0, reward: 40, difficulty: 'medium', claimed: false },
                 { id: 6, name: 'Поймать 40 детей', target: 40, progress: 0, reward: 75, difficulty: 'medium', claimed: false },
                 
-                // Сложные (Hard)
+                // Сложные (Hard) - 2 задания
                 { id: 7, name: 'Поймать 60 детей', target: 60, progress: 0, reward: 120, difficulty: 'hard', claimed: false },
-                { id: 8, name: 'Заработать 400 Азотиков', target: 400, progress: 0, reward: 100, difficulty: 'hard', claimed: false },
+                { id: 8, name: 'Заработать 400 ⭐', target: 400, progress: 0, reward: 100, difficulty: 'hard', claimed: false },
                 
-                // Эксперт (Expert)
+                // Эксперт (Expert) - 1 задание
                 { id: 9, name: 'Поймать 100 детей', target: 100, progress: 0, reward: 200, difficulty: 'expert', claimed: false },
                 
-                // Легендарный (Legendary)
-                { id: 10, name: 'Заработать 1000 Азотиков', target: 1000, progress: 0, reward: 350, difficulty: 'legendary', claimed: false }
+                // Легендарный (Legendary) - 1 задание
+                { id: 10, name: 'Заработать 1000 ⭐', target: 1000, progress: 0, reward: 350, difficulty: 'legendary', claimed: false }
             ];
         }
 
@@ -1429,20 +1557,20 @@
             const container = document.getElementById('dailyTasks');
             container.innerHTML = '';
             
-            // Сортировка по сложности
             const difficultyOrder = { easy: 0, medium: 1, hard: 2, expert: 3, legendary: 4 };
             const sortedTasks = [...dailyTasks].sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
+            
+            const diffLabels = {
+                easy: '🟢 Лёгкое',
+                medium: '🟡 Среднее',
+                hard: '🔴 Сложное',
+                expert: '🟣 Эксперт',
+                legendary: '⭐ Легендарное'
+            };
             
             sortedTasks.forEach(task => {
                 const div = document.createElement('div');
                 const completed = task.progress >= task.target;
-                const diffLabels = {
-                    easy: '🟢 Лёгкое',
-                    medium: '🟡 Среднее',
-                    hard: '🔴 Сложное',
-                    expert: '🟣 Эксперт',
-                    legendary: '⭐ Легендарное'
-                };
                 
                 div.className = `daily-task ${task.difficulty}`;
                 div.innerHTML = `
@@ -1453,7 +1581,7 @@
                         </div>
                         <div class="task-progress">${Math.min(task.progress, task.target)}/${task.target}</div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;">
+                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
                         <span class="task-reward">+${task.reward} 🏆</span>
                         <button class="claim-btn" ${task.claimed || !completed ? 'disabled' : ''} data-task="${task.id}">
                             ${task.claimed ? '✅' : completed ? 'Забрать' : '⏳'}
@@ -1630,7 +1758,7 @@
                             if (task.name.includes('Поймать')) {
                                 task.progress++;
                             }
-                            if (task.name.includes('Азотиков')) {
+                            if (task.name.includes('Заработать')) {
                                 task.progress += reward;
                             }
                         }
@@ -1681,6 +1809,12 @@
             updateBossButton();
             animationId = requestAnimationFrame(gameLoop);
         }
+
+        // --- Скрытие заставки ---
+        setTimeout(() => {
+            const splash = document.getElementById('splashScreen');
+            splash.classList.add('hidden');
+        }, 2500);
 
         // --- События ---
         canvas.addEventListener('click', handleCanvasClick);
@@ -1893,14 +2027,14 @@
         renderDailyTasks();
 
         if (soundManager.musicEnabled) {
-            setTimeout(() => soundManager.startMusic(), 1500);
+            setTimeout(() => soundManager.startMusic(), 2500);
         }
 
         console.log('🏕️ Лагерь Звёздный запущен!');
         console.log('⭐ Азотиков:', azotiki);
         console.log('🏆 Кубков:', cups);
         console.log('✨ Множитель: x' + multiplier);
-        console.log('🎵 Короткая прикольная музыка!');
+        console.log('🎵 Энергичная музыка!');
     </script>
 </body>
 </html>
