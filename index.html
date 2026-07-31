@@ -55,16 +55,10 @@
             background: linear-gradient(135deg, #FFD700, #FFA500, #FF6B00);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: none;
             font-family: 'Arial Black', Arial, sans-serif;
             letter-spacing: 6px;
             animation: titleGlow 2s ease-in-out infinite;
-            position: relative;
             z-index: 2;
-        }
-
-        #splashTitle span {
-            -webkit-text-fill-color: transparent;
         }
 
         @keyframes titleGlow {
@@ -77,11 +71,10 @@
             animation: zubrJump 2s ease-in-out infinite;
             margin: -10px 0;
             filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.2));
-            position: relative;
             z-index: 2;
+            position: relative;
         }
 
-        /* Синий костюм для зубра через псевдо-элемент */
         #splashZubr::after {
             content: '👔';
             font-size: clamp(20px, 4vw, 50px);
@@ -107,7 +100,6 @@
             letter-spacing: 8px;
             font-weight: 300;
             text-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
-            position: relative;
             z-index: 2;
         }
 
@@ -129,7 +121,6 @@
         #splashChildren span {
             animation: childWave 3s ease-in-out infinite;
         }
-
         #splashChildren span:nth-child(1) { animation-delay: 0s; }
         #splashChildren span:nth-child(2) { animation-delay: 0.3s; }
         #splashChildren span:nth-child(3) { animation-delay: 0.6s; }
@@ -142,7 +133,6 @@
             50% { transform: translateY(-15px); }
         }
 
-        /* Звёзды на заставке */
         .star {
             position: absolute;
             background: white;
@@ -233,6 +223,10 @@
             height: 100vh;
             cursor: pointer;
             touch-action: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1;
         }
 
         /* ===== МОДАЛЬНЫЕ ОКНА ===== */
@@ -307,8 +301,6 @@
             color: #1a1a2e;
             margin-bottom: 16px;
         }
-
-        .balance span { color: #1a1a2e; }
 
         /* ===== УЛУЧШЕНИЯ ===== */
         .upgrade-list {
@@ -454,11 +446,6 @@
 
         .vip-item .vip-info { display: flex; align-items: center; gap: 10px; }
         .vip-item .vip-price { font-weight: bold; color: #FFD700; }
-
-        .vip-multiplier-item {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 165, 0, 0.25));
-            border: 2px solid #FFD700;
-        }
 
         /* ===== ПРОФИЛЬ ===== */
         .profile-item {
@@ -621,7 +608,6 @@
     <div id="app">
         <!-- ===== ЗАСТАВКА ===== -->
         <div id="splashScreen">
-            <!-- Звёзды -->
             <div class="star" style="width:3px;height:3px;top:10%;left:15%;animation-delay:0.2s;"></div>
             <div class="star" style="width:2px;height:2px;top:20%;right:20%;animation-delay:0.5s;"></div>
             <div class="star" style="width:4px;height:4px;top:30%;left:10%;animation-delay:0.8s;"></div>
@@ -635,12 +621,7 @@
             <div id="splashZubr">🦬</div>
             <div id="splashSub">ДЕТСКИЙ ЛАГЕРЬ</div>
             <div id="splashChildren">
-                <span>👧</span>
-                <span>👦</span>
-                <span>🧒</span>
-                <span>👶</span>
-                <span>👧</span>
-                <span>👦</span>
+                <span>👧</span><span>👦</span><span>🧒</span><span>👶</span><span>👧</span><span>👦</span>
             </div>
         </div>
 
@@ -692,15 +673,15 @@
                             <div class="upgrade-info"><span class="upgrade-icon">⚡</span><div><div class="upgrade-title">Скорость детей</div><div class="upgrade-desc">Текущий: <span id="speedLevel">1</span></div></div></div>
                             <button class="buy-btn" id="buySpeed">Купить за <span class="cost">60</span> ⭐</button>
                         </div>
+                        <div class="upgrade-item" style="border-color:#FFD700;background:rgba(255,215,0,0.05);">
+                            <div class="upgrade-info"><span class="upgrade-icon">✨</span><div><div class="upgrade-title" style="color:#FFD700;">Множитель азотиков</div><div class="upgrade-desc">Текущий: x<span id="multiLevel">1</span></div></div></div>
+                            <button class="buy-btn" id="buyMultiplier" style="background:linear-gradient(135deg,#FFD700,#FFA500);color:#1a1a2e;">Купить за <span class="cost">1000</span> ⭐</button>
+                        </div>
                     </div>
                 </div>
 
                 <!-- VIP -->
                 <div class="tab-content" id="tab-vip">
-                    <div class="vip-item vip-multiplier-item">
-                        <div class="vip-info"><span style="font-size:24px;">✨</span><div><div class="upgrade-title" style="color:#fff;">Множитель азотиков</div><div class="upgrade-desc">Текущий: x<span id="vipMultiplierLevel">1</span> → x<span id="vipNextMultiplier">2</span></div></div></div>
-                        <button class="buy-btn" id="buyVipMultiplier" style="background:linear-gradient(135deg,#FF6B6B,#FF4757);">Купить за <span class="cost">50</span> 🏆</button>
-                    </div>
                     <div class="vip-item"><div class="vip-info"><span style="font-size:22px;">🌅</span><div><div class="upgrade-title">Закатный фон</div><div class="upgrade-desc">Красивый закат</div></div></div><button class="buy-btn vip-buy" data-type="theme" data-id="1">Купить за <span class="cost">100</span> 🏆</button></div>
                     <div class="vip-item"><div class="vip-info"><span style="font-size:22px;">🌙</span><div><div class="upgrade-title">Ночной фон</div><div class="upgrade-desc">Звёздная ночь</div></div></div><button class="buy-btn vip-buy" data-type="theme" data-id="2">Купить за <span class="cost">200</span> 🏆</button></div>
                     <div class="vip-item"><div class="vip-info"><span style="font-size:22px;">🤖</span><div><div class="upgrade-title">Робот-ребёнок</div><div class="upgrade-desc">Кибер-стиль</div></div></div><button class="buy-btn vip-buy" data-type="skin" data-id="1">Купить за <span class="cost">150</span> 🏆</button></div>
@@ -748,7 +729,8 @@
 
     <script>
         // =====================================================
-        // ===== TELEGRAM WEBAPP =====        // =====================================================
+        // ===== TELEGRAM WEBAPP =====
+        // =====================================================
         let tg = window.Telegram?.WebApp;
         if (tg) { tg.expand(); tg.enableClosingConfirmation(); }
 
@@ -785,7 +767,6 @@
                 } catch(e) {}
             }
 
-            // Энергичная весёлая музыка
             startMusic() {
                 if (!this.musicEnabled || !this.ctx) return;
                 if (this.musicInterval) return;
@@ -853,7 +834,7 @@
         function saveGame() {
             try {
                 localStorage.setItem(SAVE_KEY, JSON.stringify({
-                    score, azotiki, cups, multiplier, vipMultiplierLevel, multiplierCost,
+                    score, azotiki, cups, multiplier,
                     catchRadius, maxChildren, speedLevel, costs,
                     lastBossTime, ownedThemes, ownedSkins, activeTheme, activeSkin,
                     dailyTasks, lastDailyReset, totalCaught, totalEarned,
@@ -871,12 +852,10 @@
                 azotiki = data.azotiki || 0;
                 cups = data.cups || 0;
                 multiplier = data.multiplier || 1;
-                vipMultiplierLevel = data.vipMultiplierLevel || 0;
-                multiplierCost = data.multiplierCost || 50;
                 catchRadius = data.catchRadius || 30;
                 maxChildren = data.maxChildren || 5;
                 speedLevel = data.speedLevel || 1;
-                costs = data.costs || { radius: 50, children: 80, speed: 60 };
+                costs = data.costs || { radius: 50, children: 80, speed: 60, multiplier: 1000 };
                 lastBossTime = data.lastBossTime || 0;
                 ownedThemes = data.ownedThemes || [];
                 ownedSkins = data.ownedSkins || [];
@@ -903,7 +882,6 @@
         // ===== ПЕРЕМЕННЫЕ =====
         // =====================================================
         let score = 0, azotiki = 0, cups = 0, multiplier = 1;
-        let vipMultiplierLevel = 0, multiplierCost = 50;
         let catchRadius = 30, maxChildren = 5, speedLevel = 1;
         let children = [], spawnTimer = 0, animId = null;
         let lastBossTime = 0, bossCooldown = 3600;
@@ -911,7 +889,7 @@
         let dailyTasks = [], lastDailyReset = Date.now();
         let totalCaught = 0, totalEarned = 0, bonusActive = false;
 
-        let costs = { radius: 50, children: 80, speed: 60 };
+        let costs = { radius: 50, children: 80, speed: 60, multiplier: 1000 };
         const vipPrices = { theme1: 100, theme2: 200, skin1: 150, skin2: 250 };
 
         // =====================================================
@@ -953,23 +931,25 @@
         };
 
         // =====================================================
-        // ===== КЛАСС РЕБЁНОК =====
+        // ===== КЛАСС РЕБЁНОК (ЧЕЛОВЕЧКИ С ИМЕНАМИ) =====
         // =====================================================
         class Child {
             constructor() {
-                this.radius = 18;
-                const maxSpeed = 2 + speedLevel * 0.5;
+                this.radius = 20;
+                const maxSpeed = 1.5 + speedLevel * 0.3;
                 this.x = Math.random() * (canvas.width - this.radius * 2) + this.radius;
                 this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
                 this.speedX = (Math.random() - 0.5) * maxSpeed * 2;
                 this.speedY = (Math.random() - 0.5) * maxSpeed * 2;
-                this.names = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля', 'Дима', 'Катя', 'Серёжа', 'Таня', 'Миша'];
+                this.names = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля', 'Дима', 'Катя', 'Серёжа', 'Таня', 'Миша', 'Лена', 'Вова', 'Даша', 'Саша', 'Настя'];
                 this.name = this.names[Math.floor(Math.random() * this.names.length)];
                 this.emoji = skins[activeSkin]?.emoji || '👶';
+                this.color = this.randomColor();
+                this.eyeColor = '#2d3436';
             }
 
             randomColor() {
-                const colors = ['#FF4757', '#FF6B81', '#FFA502', '#2ED573', '#1E90FF', '#A29BFE', '#FD79A8', '#00CEC9'];
+                const colors = ['#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF6BFF', '#FF9F43', '#00D2D3', '#F368E0'];
                 return colors[Math.floor(Math.random() * colors.length)];
             }
 
@@ -981,49 +961,74 @@
             }
 
             draw(ctx) {
-                if (activeSkin > 0 && this.emoji) {
-                    ctx.font = `${this.radius * 2}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(this.emoji, this.x, this.y);
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '10px Arial';
-                    ctx.textBaseline = 'bottom';
-                    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                    ctx.shadowBlur = 4;
-                    ctx.fillText(this.name, this.x, this.y + this.radius + 14);
-                    ctx.shadowBlur = 0;
-                    return;
-                }
-                const color = this.randomColor();
+                // Тело (круг)
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = color;
+                ctx.fillStyle = this.color;
                 ctx.fill();
                 ctx.strokeStyle = '#2d3436';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1.5;
                 ctx.stroke();
-                ctx.fillStyle = '#2d3436';
-                ctx.beginPath();
-                ctx.arc(this.x - 6, this.y - 4, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(this.x + 6, this.y - 4, 3, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(this.x, this.y + 2, 8, 0.1, Math.PI - 0.1);
-                ctx.stroke();
+
+                // Глаза
                 ctx.fillStyle = '#fff';
-                ctx.font = '10px Arial';
+                ctx.beginPath();
+                ctx.arc(this.x - 7, this.y - 4, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + 7, this.y - 4, 5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = this.eyeColor;
+                ctx.beginPath();
+                ctx.arc(this.x - 5, this.y - 2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + 9, this.y - 2, 2.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Блики в глазах
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.beginPath();
+                ctx.arc(this.x - 6, this.y - 5, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + 8, this.y - 5, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Улыбка
+                ctx.beginPath();
+                ctx.arc(this.x, this.y + 2, 7, 0.1, Math.PI - 0.1);
+                ctx.strokeStyle = '#2d3436';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                // Румянец
+                ctx.fillStyle = 'rgba(255,150,150,0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x - 12, this.y + 3, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(this.x + 12, this.y + 3, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Имя под персонажем
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 11px Arial';
                 ctx.textAlign = 'center';
                 ctx.shadowColor = 'rgba(0,0,0,0.8)';
-                ctx.shadowBlur = 4;
-                ctx.fillText(this.name, this.x, this.y + this.radius + 14);
+                ctx.shadowBlur = 6;
+                ctx.fillText(this.name, this.x, this.y + this.radius + 16);
                 ctx.shadowBlur = 0;
-                ctx.fillStyle = 'rgba(255,255,255,0.3)';
-                ctx.beginPath();
-                ctx.arc(this.x - 5, this.y - 7, 4, 0, Math.PI * 2);
-                ctx.fill();
+
+                // Если скин активен - добавляем эмодзи сверху
+                if (activeSkin > 0 && this.emoji) {
+                    ctx.font = '16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'bottom';
+                    ctx.fillText(this.emoji, this.x, this.y - this.radius - 4);
+                    ctx.textBaseline = 'alphabetic';
+                }
             }
 
             isClicked(mx, my) {
@@ -1065,20 +1070,16 @@
             $('radiusLevel').textContent = catchRadius;
             $('childrenLevel').textContent = maxChildren;
             $('speedLevel').textContent = speedLevel;
+            $('multiLevel').textContent = multiplier;
 
             $('buyRadius').disabled = azotiki < costs.radius;
             $('buyChildren').disabled = azotiki < costs.children;
             $('buySpeed').disabled = azotiki < costs.speed;
+            $('buyMultiplier').disabled = azotiki < costs.multiplier;
             $('buyRadius .cost').textContent = costs.radius;
             $('buyChildren .cost').textContent = costs.children;
             $('buySpeed .cost').textContent = costs.speed;
-
-            const next = Math.pow(2, vipMultiplierLevel + 1);
-            $('vipMultiplierLevel').textContent = multiplier;
-            $('vipNextMultiplier').textContent = next;
-            const vipBtn = $('buyVipMultiplier');
-            vipBtn.disabled = cups < multiplierCost;
-            vipBtn.querySelector('.cost').textContent = multiplierCost;
+            $('buyMultiplier .cost').textContent = costs.multiplier;
 
             document.querySelectorAll('.vip-buy').forEach(b => {
                 const type = b.dataset.type, id = parseInt(b.dataset.id);
@@ -1248,7 +1249,7 @@
             catchRadius = 30;
             maxChildren = 5;
             speedLevel = 1;
-            costs = { radius: 50, children: 80, speed: 60 };
+            costs = { radius: 50, children: 80, speed: 60, multiplier: 1000 };
             children = [];
             spawnChildren();
             showNotification(`✨ Множитель x${multiplier}!`);
@@ -1270,23 +1271,6 @@
             showNotification('🚀 Бонус x4 активирован!');
             updateUI();
             saveGame();
-        }
-
-        // =====================================================
-        // ===== VIP МНОЖИТЕЛЬ =====
-        // =====================================================
-        function buyVipMultiplier() {
-            if (cups >= multiplierCost) {
-                cups -= multiplierCost;
-                vipMultiplierLevel++;
-                multiplier = Math.pow(2, vipMultiplierLevel);
-                multiplierCost *= 2;
-                showNotification(`✨ Множитель x${multiplier}!`);
-                updateUI();
-                saveGame();
-            } else {
-                showNotification(`❌ Нужно ${multiplierCost} 🏆!`, false);
-            }
         }
 
         // =====================================================
@@ -1442,7 +1426,7 @@
                 speedLevel += 1;
                 costs.speed += 30;
                 showNotification('⚡ Быстрее!');
-                const maxSpeed = 2 + speedLevel * 0.5;
+                const maxSpeed = 1.5 + speedLevel * 0.3;
                 children.forEach(child => {
                     const cur = Math.sqrt(child.speedX * child.speedX + child.speedY * child.speedY);
                     if (cur > 0) {
@@ -1456,9 +1440,19 @@
             } else showNotification('❌ Не хватает!', false);
         });
 
-        // --- VIP ---
-        $('buyVipMultiplier').addEventListener('click', buyVipMultiplier);
+        // --- Множитель за 1000 азотиков ---
+        $('buyMultiplier').addEventListener('click', () => {
+            if (azotiki >= costs.multiplier) {
+                azotiki -= costs.multiplier;
+                multiplier += 1;
+                costs.multiplier = Math.floor(costs.multiplier * 1.5);
+                showNotification(`✨ Множитель x${multiplier}!`);
+                updateUI();
+                saveGame();
+            } else showNotification(`❌ Нужно ${costs.multiplier} ⭐!`, false);
+        });
 
+        // --- VIP ---
         document.querySelectorAll('.vip-buy').forEach(btn => {
             btn.addEventListener('click', function() {
                 const type = this.dataset.type;
@@ -1557,6 +1551,7 @@
 
         console.log('🏕️ Купалинка запущен!');
         console.log('⭐', azotiki, '🏆', cups, '✨ x' + multiplier);
+        console.log('👶 Детей на экране:', children.length);
     </script>
 </body>
 </html>
