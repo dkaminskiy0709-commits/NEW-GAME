@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>🏕️ Лагерь Звёздный</title>
+    <title>🏕️ Купалинка - Лагерь</title>
     <style>
         * {
             margin: 0;
@@ -18,6 +18,7 @@
             height: 100vh;
             width: 100vw;
             user-select: none;
+            background: #1a1a2e;
         }
 
         #app {
@@ -27,106 +28,148 @@
             overflow: hidden;
         }
 
-        /* ЗАСТАВКА */
+        /* ===== ЗАСТАВКА ===== */
         #splashScreen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #2d3436, #00b894, #0984e3);
+            background: linear-gradient(135deg, #0c0c1e 0%, #1a1a3e 30%, #2d1b4e 60%, #1a1a3e 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
-            animation: splashFade 2s ease forwards;
-            pointer-events: none;
-        }
-
-        @keyframes splashFade {
-            0% { opacity: 1; }
-            80% { opacity: 1; }
-            100% { opacity: 0; }
+            z-index: 9999;
+            transition: opacity 0.8s ease;
         }
 
         #splashScreen.hidden {
-            display: none;
+            opacity: 0;
+            pointer-events: none;
         }
 
         #splashTitle {
-            font-size: clamp(60px, 15vw, 160px);
+            font-size: clamp(50px, 14vw, 160px);
             font-weight: 900;
-            color: #FFD700;
-            text-shadow: 0 0 60px rgba(255, 215, 0, 0.3), 0 4px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #FFD700, #FFA500, #FF6B00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
             font-family: 'Arial Black', Arial, sans-serif;
-            letter-spacing: 8px;
-            animation: splashPulse 1.5s ease-in-out infinite;
-            z-index: 1001;
+            letter-spacing: 6px;
+            animation: titleGlow 2s ease-in-out infinite;
+            position: relative;
+            z-index: 2;
         }
 
-        @keyframes splashPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        #splashTitle span {
+            -webkit-text-fill-color: transparent;
         }
 
-        #splashSub {
-            font-size: clamp(20px, 4vw, 40px);
-            color: white;
-            text-shadow: 0 2px 20px rgba(0,0,0,0.5);
-            margin-top: 10px;
-            font-weight: 300;
-            letter-spacing: 4px;
-            z-index: 1001;
+        @keyframes titleGlow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.3)); }
+            50% { filter: drop-shadow(0 0 60px rgba(255, 215, 0, 0.6)); }
         }
 
         #splashZubr {
             font-size: clamp(80px, 20vw, 200px);
-            animation: zubrSplash 1.5s ease-in-out infinite;
-            margin-top: -10px;
-            z-index: 1001;
+            animation: zubrJump 2s ease-in-out infinite;
+            margin: -10px 0;
             filter: drop-shadow(0 0 40px rgba(255, 215, 0, 0.2));
-        }
-
-        #splashZubr .zubr-suit {
             position: relative;
-            display: inline-block;
+            z-index: 2;
         }
 
-        @keyframes zubrSplash {
-            0%, 100% { transform: translateY(0px) rotate(-2deg); }
-            50% { transform: translateY(-15px) rotate(2deg); }
+        /* Синий костюм для зубра через псевдо-элемент */
+        #splashZubr::after {
+            content: '👔';
+            font-size: clamp(20px, 4vw, 50px);
+            position: absolute;
+            bottom: -10px;
+            right: -20px;
+            animation: suitShine 1.5s ease-in-out infinite;
+        }
+
+        @keyframes suitShine {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(10deg); }
+        }
+
+        @keyframes zubrJump {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
+        }
+
+        #splashSub {
+            font-size: clamp(18px, 4vw, 40px);
+            color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 8px;
+            font-weight: 300;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
+            position: relative;
+            z-index: 2;
         }
 
         #splashChildren {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 0;
             right: 0;
             display: flex;
             justify-content: center;
-            gap: 20px;
+            gap: clamp(10px, 3vw, 30px);
             font-size: clamp(30px, 6vw, 60px);
-            z-index: 1001;
-            opacity: 0.6;
+            opacity: 0.5;
+            z-index: 1;
             flex-wrap: wrap;
             padding: 0 20px;
         }
 
-        /* Верхняя панель */
+        #splashChildren span {
+            animation: childWave 3s ease-in-out infinite;
+        }
+
+        #splashChildren span:nth-child(1) { animation-delay: 0s; }
+        #splashChildren span:nth-child(2) { animation-delay: 0.3s; }
+        #splashChildren span:nth-child(3) { animation-delay: 0.6s; }
+        #splashChildren span:nth-child(4) { animation-delay: 0.9s; }
+        #splashChildren span:nth-child(5) { animation-delay: 1.2s; }
+        #splashChildren span:nth-child(6) { animation-delay: 1.5s; }
+
+        @keyframes childWave {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        /* Звёзды на заставке */
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s ease-in-out infinite;
+            z-index: 1;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 1; }
+        }
+
+        /* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */
         #topPanel {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             padding: 6px 10px;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(10px);
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 10;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid rgba(255, 215, 0, 0.15);
             flex-wrap: wrap;
             gap: 4px;
         }
@@ -139,8 +182,8 @@
         }
 
         .btn-icon {
-            background: rgba(255, 255, 255, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             border-radius: 50%;
             width: 34px;
             height: 34px;
@@ -155,6 +198,7 @@
 
         .btn-icon:active {
             transform: scale(0.9);
+            background: rgba(255, 215, 0, 0.2);
         }
 
         #stats {
@@ -165,160 +209,108 @@
         }
 
         .stat-item {
-            background: rgba(255, 255, 255, 0.12);
-            padding: 3px 8px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 3px 10px;
             border-radius: 14px;
             display: flex;
             align-items: center;
-            gap: 3px;
+            gap: 4px;
             font-size: 12px;
             font-weight: bold;
             color: white;
             backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .stat-item .icon {
             font-size: 14px;
         }
 
-        /* Игровое поле */
+        /* ===== ИГРОВОЕ ПОЛЕ ===== */
         #gameCanvas {
             display: block;
             width: 100vw;
             height: 100vh;
             cursor: pointer;
             touch-action: none;
-            position: relative;
         }
 
-        /* Фоновый контейнер */
-        #backgroundContainer {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-
-        #backgroundText {
-            font-size: clamp(50px, 10vw, 130px);
-            font-weight: 900;
-            color: rgba(255, 255, 255, 0.08);
-            text-shadow: 0 0 40px rgba(255, 215, 0, 0.05);
-            letter-spacing: 6px;
-            text-align: center;
-            font-family: 'Arial Black', Arial, sans-serif;
-            line-height: 1.1;
-            user-select: none;
-            animation: textPulse 4s ease-in-out infinite;
-            position: relative;
-            z-index: 2;
-            transform: rotate(-5deg);
-        }
-
-        #zubrSticker {
-            font-size: clamp(70px, 16vw, 180px);
-            animation: zubrFloat 6s ease-in-out infinite;
-            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 0.1));
-            margin-top: -15px;
-            position: relative;
-            z-index: 2;
-        }
-
-        @keyframes textPulse {
-            0%, 100% { opacity: 0.5; transform: rotate(-5deg) scale(1); }
-            50% { opacity: 0.8; transform: rotate(-5deg) scale(1.02); }
-        }
-
-        @keyframes zubrFloat {
-            0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-12px) scale(1.05); }
-        }
-
-        /* Модальное окно */
+        /* ===== МОДАЛЬНЫЕ ОКНА ===== */
         .modal {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 100;
-            animation: fadeIn 0.3s ease;
+            animation: modalFade 0.3s ease;
         }
 
         .modal.hidden {
             display: none;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
+        @keyframes modalFade {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .modal-content {
-            background: white;
-            border-radius: 20px;
-            padding: 16px;
+            background: linear-gradient(145deg, #1a1a2e, #16213e);
+            border-radius: 24px;
+            padding: 20px;
             max-width: 420px;
             width: 92%;
             max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.1);
         }
 
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
         }
 
         .modal-header h2 {
             font-size: 20px;
-            color: #333;
+            color: #FFD700;
+            font-weight: 800;
         }
 
         .close-btn {
             background: none;
             border: none;
-            font-size: 26px;
-            color: #999;
+            font-size: 28px;
+            color: #666;
             cursor: pointer;
             padding: 0 8px;
+            transition: color 0.2s;
         }
 
-        .close-btn:active {
-            color: #333;
-        }
+        .close-btn:hover { color: white; }
 
         .balance {
             background: linear-gradient(135deg, #FFD700, #FFA500);
-            padding: 10px;
-            border-radius: 12px;
+            padding: 12px;
+            border-radius: 14px;
             text-align: center;
             font-size: 17px;
             font-weight: bold;
-            color: #333;
-            margin-bottom: 14px;
+            color: #1a1a2e;
+            margin-bottom: 16px;
         }
 
+        .balance span { color: #1a1a2e; }
+
+        /* ===== УЛУЧШЕНИЯ ===== */
         .upgrade-list {
             display: flex;
             flex-direction: column;
@@ -326,18 +318,17 @@
         }
 
         .upgrade-item {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
             padding: 10px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 2px solid #e9ecef;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.2s;
         }
 
-        .upgrade-item:active {
-            transform: scale(0.98);
-        }
+        .upgrade-item:active { transform: scale(0.98); }
 
         .upgrade-info {
             display: flex;
@@ -346,66 +337,47 @@
             flex: 1;
         }
 
-        .upgrade-icon {
-            font-size: 22px;
-        }
-
-        .upgrade-title {
-            font-weight: bold;
-            font-size: 13px;
-            color: #333;
-        }
-
-        .upgrade-desc {
-            font-size: 11px;
-            color: #666;
-            margin-top: 1px;
-        }
+        .upgrade-icon { font-size: 22px; }
+        .upgrade-title { font-weight: bold; font-size: 13px; color: #fff; }
+        .upgrade-desc { font-size: 11px; color: #888; margin-top: 1px; }
 
         .buy-btn {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            padding: 5px 12px;
+            padding: 5px 14px;
             border-radius: 14px;
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.2s;
             white-space: nowrap;
-            transition: transform 0.2s, opacity 0.2s;
         }
 
-        .buy-btn:active {
-            transform: scale(0.95);
-        }
+        .buy-btn:active { transform: scale(0.95); }
+        .buy-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .buy-btn .cost { color: #FFD700; }
 
-        .buy-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-
-        .buy-btn .cost {
-            color: #FFD700;
-        }
-
+        /* ===== ТАБЫ ===== */
         .tab-bar {
             display: flex;
             gap: 6px;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-            padding-bottom: 6px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 8px;
         }
 
         .tab-btn {
             flex: 1;
             padding: 6px;
             border: none;
-            background: #f1f3f5;
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
             font-size: 12px;
+            color: #888;
         }
 
         .tab-btn.active {
@@ -413,102 +385,13 @@
             color: white;
         }
 
-        .tab-btn:active {
-            transform: scale(0.95);
-        }
+        .tab-btn:active { transform: scale(0.95); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Уведомление */
-        .notification {
-            position: fixed;
-            top: 65px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 8px 18px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: bold;
-            backdrop-filter: blur(10px);
-            z-index: 50;
-            animation: slideDown 0.5s ease;
-            text-align: center;
-            max-width: 85%;
-            pointer-events: none;
-        }
-
-        .notification.hidden {
-            display: none;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-
-        /* Эффект ловли */
-        .catch-effect {
-            position: fixed;
-            pointer-events: none;
-            z-index: 20;
-            animation: popEffect 0.6s ease forwards;
-        }
-
-        @keyframes popEffect {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(2);
-                opacity: 0;
-            }
-        }
-
-        /* Босс */
-        .boss-notification {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 42px;
-            z-index: 30;
-            animation: bossAppear 1s ease forwards;
-            pointer-events: none;
-        }
-
-        @keyframes bossAppear {
-            0% {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0;
-            }
-            50% {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 1;
-            }
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* Ежедневные задания */
+        /* ===== ЗАДАНИЯ ===== */
         .daily-task {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.04);
             border-radius: 10px;
             padding: 8px 10px;
             margin-bottom: 6px;
@@ -518,38 +401,16 @@
             border-left: 4px solid #2ED573;
         }
 
-        .daily-task .task-info {
-            display: flex;
-            flex-direction: column;
-            gap: 1px;
-            flex: 1;
-        }
-
-        .daily-task .task-name {
-            font-weight: bold;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .daily-task .task-progress {
-            font-size: 11px;
-            color: #666;
-        }
-
-        .daily-task .task-reward {
-            font-size: 12px;
-            font-weight: bold;
-            color: #FFD700;
-        }
+        .daily-task .task-info { flex: 1; }
+        .daily-task .task-name { font-weight: bold; font-size: 12px; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .daily-task .task-progress { font-size: 11px; color: #888; margin-top: 1px; }
+        .daily-task .task-reward { font-size: 12px; font-weight: bold; color: #FFD700; }
 
         .daily-task .claim-btn {
             background: linear-gradient(135deg, #2ED573, #26de81);
             color: white;
             border: none;
-            padding: 3px 10px;
+            padding: 3px 12px;
             border-radius: 10px;
             font-size: 11px;
             font-weight: bold;
@@ -557,10 +418,7 @@
             white-space: nowrap;
         }
 
-        .daily-task .claim-btn:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
+        .daily-task .claim-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         .daily-task.easy { border-left-color: #2ED573; }
         .daily-task.medium { border-left-color: #FFA502; }
@@ -569,65 +427,57 @@
         .daily-task.legendary { border-left-color: #FFD700; }
 
         .difficulty-badge {
-            font-size: 9px;
+            font-size: 8px;
             padding: 1px 8px;
             border-radius: 10px;
             font-weight: bold;
             white-space: nowrap;
         }
+
         .difficulty-badge.easy { background: #2ED573; color: white; }
         .difficulty-badge.medium { background: #FFA502; color: white; }
         .difficulty-badge.hard { background: #FF4757; color: white; }
         .difficulty-badge.expert { background: #A29BFE; color: white; }
-        .difficulty-badge.legendary { background: #FFD700; color: #333; }
+        .difficulty-badge.legendary { background: #FFD700; color: #1a1a2e; }
 
+        /* ===== VIP ===== */
         .vip-item {
-            background: linear-gradient(135deg, #FFD700, #FFA500);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 165, 0, 0.15));
             border-radius: 12px;
             padding: 10px 12px;
             margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border: 1px solid rgba(255, 215, 0, 0.2);
         }
 
-        .vip-item .vip-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .vip-item .vip-price {
-            font-weight: bold;
-            color: #333;
-        }
+        .vip-item .vip-info { display: flex; align-items: center; gap: 10px; }
+        .vip-item .vip-price { font-weight: bold; color: #FFD700; }
 
         .vip-multiplier-item {
-            background: linear-gradient(135deg, #FFD700, #FFA500) !important;
-            border: 3px solid #FF6B6B !important;
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.25), rgba(255, 165, 0, 0.25));
+            border: 2px solid #FFD700;
         }
 
-        /* Профиль */
+        /* ===== ПРОФИЛЬ ===== */
         .profile-item {
-            background: #f8f9fa;
+            background: rgba(255, 255, 255, 0.04);
             border-radius: 12px;
             padding: 10px 12px;
             margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 2px solid #e9ecef;
+            border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .profile-item .profile-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .profile-item .profile-info { display: flex; align-items: center; gap: 10px; }
+        .profile-item .upgrade-title { color: #fff; }
+        .profile-item .upgrade-desc { color: #888; }
 
         .toggle-btn {
-            background: #e9ecef;
+            background: rgba(255, 255, 255, 0.1);
             border: none;
             padding: 6px 16px;
             border-radius: 20px;
@@ -635,17 +485,11 @@
             cursor: pointer;
             transition: all 0.3s;
             font-size: 13px;
+            color: #fff;
         }
 
-        .toggle-btn.on {
-            background: #2ED573;
-            color: white;
-        }
-
-        .toggle-btn.off {
-            background: #ff4757;
-            color: white;
-        }
+        .toggle-btn.on { background: #2ED573; color: white; }
+        .toggle-btn.off { background: #ff4757; color: white; }
 
         .support-btn {
             display: block;
@@ -658,14 +502,12 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
             text-align: center;
             text-decoration: none;
+            transition: all 0.2s;
         }
 
-        .support-btn:active {
-            transform: scale(0.95);
-        }
+        .support-btn:active { transform: scale(0.95); }
 
         .bonus-btn {
             display: block;
@@ -678,97 +520,120 @@
             font-size: 18px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
             text-align: center;
-            text-decoration: none;
             margin-top: 8px;
-            box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
             animation: bonusPulse 2s ease-in-out infinite;
+            transition: all 0.3s;
         }
 
-        .bonus-btn:active {
-            transform: scale(0.95);
-        }
-
-        .bonus-btn .small-text {
-            display: block;
-            font-size: 12px;
-            font-weight: normal;
-            opacity: 0.8;
-            margin-top: 4px;
-        }
+        .bonus-btn:active { transform: scale(0.95); }
+        .bonus-btn .small-text { display: block; font-size: 12px; font-weight: normal; opacity: 0.8; margin-top: 4px; }
 
         @keyframes bonusPulse {
-            0%, 100% { box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4); }
-            50% { box-shadow: 0 4px 30px rgba(255, 71, 87, 0.8); }
+            0%, 100% { box-shadow: 0 4px 20px rgba(255, 71, 87, 0.3); }
+            50% { box-shadow: 0 4px 40px rgba(255, 71, 87, 0.6); }
         }
 
         .bonus-active {
             background: linear-gradient(135deg, #2ED573, #26de81) !important;
-            box-shadow: 0 4px 15px rgba(46, 213, 115, 0.4) !important;
             animation: none !important;
         }
 
-        /* Мобильная адаптация */
+        /* ===== УВЕДОМЛЕНИЕ ===== */
+        .notification {
+            position: fixed;
+            top: 65px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 24px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: bold;
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            animation: notifSlide 0.5s ease;
+            text-align: center;
+            max-width: 85%;
+            pointer-events: none;
+            border: 1px solid rgba(255, 215, 0, 0.1);
+        }
+
+        .notification.hidden { display: none; }
+
+        @keyframes notifSlide {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ===== ЭФФЕКТ ЛОВЛИ ===== */
+        .catch-effect {
+            position: fixed;
+            pointer-events: none;
+            z-index: 20;
+            animation: popEffect 0.6s ease forwards;
+        }
+
+        @keyframes popEffect {
+            0% { transform: scale(0.5); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        /* ===== БОСС ===== */
+        .boss-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: clamp(30px, 8vw, 60px);
+            z-index: 30;
+            animation: bossPop 1s ease forwards;
+            pointer-events: none;
+            text-align: center;
+            font-weight: 900;
+            color: #FFD700;
+            text-shadow: 0 0 60px rgba(255, 215, 0, 0.5), 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        @keyframes bossPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        /* ===== АДАПТАЦИЯ ===== */
         @media (max-width: 480px) {
-            .stat-item {
-                font-size: 10px;
-                padding: 2px 6px;
-            }
-            .btn-icon {
-                width: 28px;
-                height: 28px;
-                font-size: 13px;
-            }
-            .modal-content {
-                padding: 10px;
-            }
-            .upgrade-item {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 4px;
-            }
-            .buy-btn {
-                width: 100%;
-            }
-            .tab-btn {
-                font-size: 10px;
-                padding: 4px;
-            }
-            .boss-notification {
-                font-size: 28px;
-            }
-            #backgroundText {
-                font-size: clamp(30px, 6vw, 60px) !important;
-            }
-            #zubrSticker {
-                font-size: clamp(40px, 10vw, 90px) !important;
-            }
-            .bonus-btn {
-                font-size: 15px;
-                padding: 12px;
-            }
-            .daily-task {
-                flex-wrap: wrap;
-                gap: 4px;
-            }
-            .daily-task .task-name {
-                font-size: 11px;
-            }
-            .difficulty-badge {
-                font-size: 8px;
-                padding: 1px 6px;
-            }
+            .stat-item { font-size: 10px; padding: 2px 8px; }
+            .btn-icon { width: 30px; height: 30px; font-size: 14px; }
+            .modal-content { padding: 14px; }
+            .upgrade-item { flex-direction: column; align-items: stretch; gap: 4px; }
+            .buy-btn { width: 100%; }
+            .tab-btn { font-size: 10px; padding: 4px; }
+            .daily-task { flex-wrap: wrap; gap: 4px; }
+            .daily-task .task-name { font-size: 11px; }
+            .difficulty-badge { font-size: 7px; padding: 1px 6px; }
+            #splashChildren { font-size: clamp(20px, 5vw, 40px); gap: 10px; }
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <!-- ЗАСТАВКА ПРИ ВХОДЕ -->
+        <!-- ===== ЗАСТАВКА ===== -->
         <div id="splashScreen">
+            <!-- Звёзды -->
+            <div class="star" style="width:3px;height:3px;top:10%;left:15%;animation-delay:0.2s;"></div>
+            <div class="star" style="width:2px;height:2px;top:20%;right:20%;animation-delay:0.5s;"></div>
+            <div class="star" style="width:4px;height:4px;top:30%;left:10%;animation-delay:0.8s;"></div>
+            <div class="star" style="width:2px;height:2px;top:40%;right:10%;animation-delay:0.3s;"></div>
+            <div class="star" style="width:3px;height:3px;top:15%;left:50%;animation-delay:0.7s;"></div>
+            <div class="star" style="width:2px;height:2px;top:50%;left:80%;animation-delay:0.9s;"></div>
+            <div class="star" style="width:3px;height:3px;top:60%;left:5%;animation-delay:0.4s;"></div>
+            <div class="star" style="width:2px;height:2px;top:70%;right:15%;animation-delay:0.6s;"></div>
+
             <div id="splashTitle">🏕️ КУПАЛИНКА</div>
             <div id="splashZubr">🦬</div>
-            <div id="splashSub">Детский лагерь</div>
+            <div id="splashSub">ДЕТСКИЙ ЛАГЕРЬ</div>
             <div id="splashChildren">
                 <span>👧</span>
                 <span>👦</span>
@@ -779,13 +644,10 @@
             </div>
         </div>
 
-        <!-- Фоновый текст и стикер -->
-        <div id="backgroundContainer">
-            <div id="backgroundText">ВОЛ"Купалинка"</div>
-            <div id="zubrSticker">🦬</div>
-        </div>
+        <!-- ===== ИГРОВОЕ ПОЛЕ ===== -->
+        <canvas id="gameCanvas"></canvas>
 
-        <!-- Верхняя панель -->
+        <!-- ===== ВЕРХНЯЯ ПАНЕЛЬ ===== -->
         <div id="topPanel">
             <div class="top-left">
                 <button id="shopBtn" class="btn-icon">🛒</button>
@@ -794,35 +656,20 @@
                 <button id="profileBtn" class="btn-icon">👤</button>
             </div>
             <div id="stats">
-                <div class="stat-item">
-                    <span class="icon">⭐</span>
-                    <span id="azotiki">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="icon">🏆</span>
-                    <span id="cups">0</span>
-                </div>
-                <div class="stat-item">
-                    <span class="icon">✨</span>
-                    <span id="multiplier">x1</span>
-                </div>
+                <div class="stat-item"><span class="icon">⭐</span><span id="azotiki">0</span></div>
+                <div class="stat-item"><span class="icon">🏆</span><span id="cups">0</span></div>
+                <div class="stat-item"><span class="icon">✨</span><span id="multiplier">x1</span></div>
             </div>
         </div>
 
-        <!-- Игровое поле -->
-        <canvas id="gameCanvas"></canvas>
-
-        <!-- Магазин -->
+        <!-- ===== МАГАЗИН ===== -->
         <div id="shopModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>🏪 Магазин</h2>
-                    <button id="closeShop" class="close-btn">✕</button>
+                    <button class="close-btn" id="closeShop">✕</button>
                 </div>
-                
-                <div class="balance">
-                    ⭐ <span id="shopAzotiki">0</span> | 🏆 <span id="shopCups">0</span> | ✨ x<span id="shopMultiplier">1</span>
-                </div>
+                <div class="balance">⭐ <span id="shopAzotiki">0</span> &nbsp;|&nbsp; 🏆 <span id="shopCups">0</span></div>
 
                 <div class="tab-bar">
                     <button class="tab-btn active" data-tab="upgrades">📈 Улучшения</button>
@@ -830,214 +677,83 @@
                     <button class="tab-btn" data-tab="daily">📅 Задания</button>
                 </div>
 
-                <!-- Вкладка Улучшения -->
+                <!-- Улучшения -->
                 <div class="tab-content active" id="tab-upgrades">
                     <div class="upgrade-list">
                         <div class="upgrade-item">
-                            <div class="upgrade-info">
-                                <span class="upgrade-icon">📏</span>
-                                <div>
-                                    <div class="upgrade-title">Радиус ловли</div>
-                                    <div class="upgrade-desc">Текущий: <span id="radiusLevel">30</span>px</div>
-                                </div>
-                            </div>
-                            <button class="buy-btn" id="buyRadius">
-                                Купить за <span class="cost">50</span> ⭐
-                            </button>
+                            <div class="upgrade-info"><span class="upgrade-icon">📏</span><div><div class="upgrade-title">Радиус ловли</div><div class="upgrade-desc">Текущий: <span id="radiusLevel">30</span>px</div></div></div>
+                            <button class="buy-btn" id="buyRadius">Купить за <span class="cost">50</span> ⭐</button>
                         </div>
-
                         <div class="upgrade-item">
-                            <div class="upgrade-info">
-                                <span class="upgrade-icon">👨‍👩‍👧</span>
-                                <div>
-                                    <div class="upgrade-title">Больше детей</div>
-                                    <div class="upgrade-desc">Текущий: <span id="childrenLevel">5</span></div>
-                                </div>
-                            </div>
-                            <button class="buy-btn" id="buyChildren">
-                                Купить за <span class="cost">80</span> ⭐
-                            </button>
+                            <div class="upgrade-info"><span class="upgrade-icon">👨‍👩‍👧</span><div><div class="upgrade-title">Больше детей</div><div class="upgrade-desc">Текущий: <span id="childrenLevel">5</span></div></div></div>
+                            <button class="buy-btn" id="buyChildren">Купить за <span class="cost">80</span> ⭐</button>
                         </div>
-
                         <div class="upgrade-item">
-                            <div class="upgrade-info">
-                                <span class="upgrade-icon">⚡</span>
-                                <div>
-                                    <div class="upgrade-title">Скорость детей</div>
-                                    <div class="upgrade-desc">Текущий: <span id="speedLevel">1</span></div>
-                                </div>
-                            </div>
-                            <button class="buy-btn" id="buySpeed">
-                                Купить за <span class="cost">60</span> ⭐
-                            </button>
+                            <div class="upgrade-info"><span class="upgrade-icon">⚡</span><div><div class="upgrade-title">Скорость детей</div><div class="upgrade-desc">Текущий: <span id="speedLevel">1</span></div></div></div>
+                            <button class="buy-btn" id="buySpeed">Купить за <span class="cost">60</span> ⭐</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- Вкладка VIP -->
+                <!-- VIP -->
                 <div class="tab-content" id="tab-vip">
-                    <div class="vip-item vip-multiplier-item" id="vipMultiplier">
-                        <div class="vip-info">
-                            <span style="font-size:24px;">✨</span>
-                            <div>
-                                <div class="upgrade-title" style="color:#333;">Множитель азотиков</div>
-                                <div class="upgrade-desc" style="color:#555;">Текущий: x<span id="vipMultiplierLevel">1</span> | Следующий: x<span id="vipNextMultiplier">2</span></div>
-                            </div>
-                        </div>
-                        <button class="buy-btn" id="buyVipMultiplier" style="background:linear-gradient(135deg,#FF6B6B,#FF4757);">
-                            Купить за <span class="cost">50</span> 🏆
-                        </button>
+                    <div class="vip-item vip-multiplier-item">
+                        <div class="vip-info"><span style="font-size:24px;">✨</span><div><div class="upgrade-title" style="color:#fff;">Множитель азотиков</div><div class="upgrade-desc">Текущий: x<span id="vipMultiplierLevel">1</span> → x<span id="vipNextMultiplier">2</span></div></div></div>
+                        <button class="buy-btn" id="buyVipMultiplier" style="background:linear-gradient(135deg,#FF6B6B,#FF4757);">Купить за <span class="cost">50</span> 🏆</button>
                     </div>
-
-                    <div class="vip-item" id="vipTheme1">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">🌅</span>
-                            <div>
-                                <div class="upgrade-title">Закатный фон</div>
-                                <div class="upgrade-desc">Красивый закат</div>
-                            </div>
-                        </div>
-                        <button class="buy-btn vip-buy" data-type="theme" data-id="1">
-                            Купить за <span class="cost">100</span> 🏆
-                        </button>
-                    </div>
-
-                    <div class="vip-item" id="vipTheme2">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">🌙</span>
-                            <div>
-                                <div class="upgrade-title">Ночной фон</div>
-                                <div class="upgrade-desc">Звёздная ночь</div>
-                            </div>
-                        </div>
-                        <button class="buy-btn vip-buy" data-type="theme" data-id="2">
-                            Купить за <span class="cost">200</span> 🏆
-                        </button>
-                    </div>
-
-                    <div class="vip-item" id="vipSkin1">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">🤖</span>
-                            <div>
-                                <div class="upgrade-title">Робот-ребёнок</div>
-                                <div class="upgrade-desc">Кибер-стиль</div>
-                            </div>
-                        </div>
-                        <button class="buy-btn vip-buy" data-type="skin" data-id="1">
-                            Купить за <span class="cost">150</span> 🏆
-                        </button>
-                    </div>
-
-                    <div class="vip-item" id="vipSkin2">
-                        <div class="vip-info">
-                            <span style="font-size:22px;">👾</span>
-                            <div>
-                                <div class="upgrade-title">Инопланетянин</div>
-                                <div class="upgrade-desc">Пришелец</div>
-                            </div>
-                        </div>
-                        <button class="buy-btn vip-buy" data-type="skin" data-id="2">
-                            Купить за <span class="cost">250</span> 🏆
-                        </button>
-                    </div>
+                    <div class="vip-item"><div class="vip-info"><span style="font-size:22px;">🌅</span><div><div class="upgrade-title">Закатный фон</div><div class="upgrade-desc">Красивый закат</div></div></div><button class="buy-btn vip-buy" data-type="theme" data-id="1">Купить за <span class="cost">100</span> 🏆</button></div>
+                    <div class="vip-item"><div class="vip-info"><span style="font-size:22px;">🌙</span><div><div class="upgrade-title">Ночной фон</div><div class="upgrade-desc">Звёздная ночь</div></div></div><button class="buy-btn vip-buy" data-type="theme" data-id="2">Купить за <span class="cost">200</span> 🏆</button></div>
+                    <div class="vip-item"><div class="vip-info"><span style="font-size:22px;">🤖</span><div><div class="upgrade-title">Робот-ребёнок</div><div class="upgrade-desc">Кибер-стиль</div></div></div><button class="buy-btn vip-buy" data-type="skin" data-id="1">Купить за <span class="cost">150</span> 🏆</button></div>
+                    <div class="vip-item"><div class="vip-info"><span style="font-size:22px;">👾</span><div><div class="upgrade-title">Инопланетянин</div><div class="upgrade-desc">Пришелец</div></div></div><button class="buy-btn vip-buy" data-type="skin" data-id="2">Купить за <span class="cost">250</span> 🏆</button></div>
                 </div>
 
-                <!-- Вкладка Ежедневные задания -->
+                <!-- Задания -->
                 <div class="tab-content" id="tab-daily">
                     <div id="dailyTasks"></div>
-                    <div style="margin-top:10px;text-align:center;font-size:11px;color:#999;">
-                        Обновляется каждые 24 часа
-                    </div>
+                    <div style="margin-top:10px;text-align:center;font-size:11px;color:#666;">Обновляется каждые 24 часа</div>
                 </div>
             </div>
         </div>
 
-        <!-- Профиль -->
+        <!-- ===== ПРОФИЛЬ ===== -->
         <div id="profileModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
                     <h2>👤 Профиль</h2>
-                    <button id="closeProfile" class="close-btn">✕</button>
+                    <button class="close-btn" id="closeProfile">✕</button>
+                </div>
+                <div class="balance">⭐ <span id="profileAzotiki">0</span> &nbsp;|&nbsp; 🏆 <span id="profileCups">0</span> &nbsp;|&nbsp; ✨ x<span id="profileMultiplier">1</span></div>
+
+                <div class="profile-item"><div class="profile-info"><span style="font-size:24px;">🔊</span><div><div class="upgrade-title">Звуки</div><div class="upgrade-desc">Звук при ловле</div></div></div><button id="soundToggle" class="toggle-btn on">Вкл</button></div>
+                <div class="profile-item"><div class="profile-info"><span style="font-size:24px;">🎵</span><div><div class="upgrade-title">Музыка</div><div class="upgrade-desc">Энергичный фон</div></div></div><button id="musicToggle" class="toggle-btn on">Вкл</button></div>
+
+                <div class="profile-item" style="border-color:#FF4757;background:rgba(255,71,87,0.05);">
+                    <div class="profile-info"><span style="font-size:24px;">🚀</span><div><div class="upgrade-title" style="color:#FF4757;">Бонус x4</div><div class="upgrade-desc" id="bonusDesc">Подпишись на канал!</div></div></div>
+                    <button id="bonusBtn" style="background:#FF4757;color:white;padding:6px 14px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:12px;">Получить</button>
                 </div>
 
-                <div class="balance">
-                    ⭐ <span id="profileAzotiki">0</span> | 🏆 <span id="profileCups">0</span> | ✨ x<span id="profileMultiplier">1</span>
+                <div style="margin:12px 0;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);">
+                    <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;font-size:13px;"><span>Всего поймано:</span><span style="color:#fff;font-weight:bold;" id="totalCaught">0</span></div>
+                    <div style="display:flex;justify-content:space-between;padding:3px 0;color:#888;font-size:13px;"><span>Всего заработано ⭐:</span><span style="color:#fff;font-weight:bold;" id="totalEarned">0</span></div>
                 </div>
 
-                <div class="profile-item">
-                    <div class="profile-info">
-                        <span style="font-size:24px;">🔊</span>
-                        <div>
-                            <div class="upgrade-title">Звуки</div>
-                            <div class="upgrade-desc">Звук при ловле детей</div>
-                        </div>
-                    </div>
-                    <button id="soundToggle" class="toggle-btn on">Вкл</button>
-                </div>
-
-                <div class="profile-item">
-                    <div class="profile-info">
-                        <span style="font-size:24px;">🎵</span>
-                        <div>
-                            <div class="upgrade-title">Музыка</div>
-                            <div class="upgrade-desc">Энергичная фоновая</div>
-                        </div>
-                    </div>
-                    <button id="musicToggle" class="toggle-btn on">Вкл</button>
-                </div>
-
-                <div class="profile-item" style="background:linear-gradient(135deg,#FF6B6B22,#FF475722);border-color:#FF4757;">
-                    <div class="profile-info">
-                        <span style="font-size:24px;">🚀</span>
-                        <div>
-                            <div class="upgrade-title" style="color:#FF4757;">Бонус x4 множитель</div>
-                            <div class="upgrade-desc" id="bonusDesc">Подпишись на канал и получи x4!</div>
-                        </div>
-                    </div>
-                    <button id="bonusBtn" class="toggle-btn" style="background:#FF4757;color:white;padding:6px 12px;font-size:12px;">
-                        Получить
-                    </button>
-                </div>
-
-                <div style="margin-top:12px;padding-top:12px;border-top:2px solid #e9ecef;">
-                    <div style="display:flex;justify-content:space-between;padding:4px 0;">
-                        <span style="color:#666;">Всего поймано:</span>
-                        <span style="font-weight:bold;" id="totalCaught">0</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding:4px 0;">
-                        <span style="color:#666;">Всего заработано ⭐:</span>
-                        <span style="font-weight:bold;" id="totalEarned">0</span>
-                    </div>
-                </div>
-
-                <div style="margin-top:12px;padding-top:12px;border-top:2px solid #e9ecef;">
-                    <a href="https://t.me/Dmitriymikha" target="_blank" class="support-btn" id="supportBtn">
-                        📩 Техническая поддержка
-                    </a>
-                    <div style="text-align:center;margin-top:6px;font-size:11px;color:#999;">
-                        @Dmitriymikha
-                    </div>
-                </div>
+                <a href="https://t.me/Dmitriymikha" target="_blank" class="support-btn">📩 Техническая поддержка</a>
+                <div style="text-align:center;margin-top:6px;font-size:11px;color:#555;">@Dmitriymikha</div>
             </div>
         </div>
 
-        <!-- Уведомление -->
+        <!-- ===== УВЕДОМЛЕНИЕ ===== -->
         <div id="notification" class="notification hidden"></div>
     </div>
 
-    <!-- Подключаем Telegram WebApp -->
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
     <script>
-        // --- Telegram WebApp инициализация ---
+        // =====================================================
+        // ===== TELEGRAM WEBAPP =====        // =====================================================
         let tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.expand();
-            tg.enableClosingConfirmation();
-        }
+        if (tg) { tg.expand(); tg.enableClosingConfirmation(); }
 
         // =====================================================
-        // ===== ЗВУКИ (ЭНЕРГИЧНАЯ МУЗЫКА) =====
+        // ===== ЗВУКИ =====
         // =====================================================
         class SoundManager {
             constructor() {
@@ -1049,11 +765,7 @@
             }
 
             initAudio() {
-                try {
-                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                } catch (e) {
-                    console.warn('Audio not supported');
-                }
+                try { this.ctx = new(window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
             }
 
             playCatchSound() {
@@ -1063,28 +775,23 @@
                     const gain = this.ctx.createGain();
                     osc.connect(gain);
                     gain.connect(this.ctx.destination);
-                    
                     osc.frequency.setValueAtTime(800, this.ctx.currentTime);
                     osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.05);
                     osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.1);
-                    
-                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
-                    
                     osc.start(this.ctx.currentTime);
                     osc.stop(this.ctx.currentTime + 0.15);
-                } catch (e) {}
+                } catch(e) {}
             }
 
-            // ЭНЕРГИЧНАЯ МУЗЫКА (быстрая, весёлая)
+            // Энергичная весёлая музыка
             startMusic() {
                 if (!this.musicEnabled || !this.ctx) return;
                 if (this.musicInterval) return;
-                
-                const playEnergyMelody = () => {
+
+                const play = () => {
                     if (!this.musicEnabled) return;
-                    
-                    // Быстрая энергичная мелодия
                     this.playNote(523, 0.08);
                     setTimeout(() => this.playNote(659, 0.08), 100);
                     setTimeout(() => this.playNote(784, 0.08), 200);
@@ -1099,17 +806,15 @@
                     setTimeout(() => this.playNote(880, 0.08), 1160);
                     setTimeout(() => this.playNote(784, 0.08), 1260);
                     setTimeout(() => this.playNote(659, 0.1), 1360);
-                    
-                    // Басовая линия
                     this.playNote(110, 0.15);
                     setTimeout(() => this.playNote(130, 0.15), 300);
                     setTimeout(() => this.playNote(110, 0.15), 600);
                     setTimeout(() => this.playNote(130, 0.15), 900);
                     setTimeout(() => this.playNote(110, 0.15), 1200);
                 };
-                
-                setTimeout(playEnergyMelody, 500);
-                this.musicInterval = setInterval(playEnergyMelody, 1600);
+
+                setTimeout(play, 500);
+                this.musicInterval = setInterval(play, 1600);
             }
 
             playNote(freq, duration) {
@@ -1121,83 +826,47 @@
                     gain.connect(this.ctx.destination);
                     osc.type = 'square';
                     osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.05, this.ctx.currentTime);
                     gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
                     osc.start(this.ctx.currentTime);
                     osc.stop(this.ctx.currentTime + duration);
-                } catch (e) {}
+                } catch(e) {}
             }
 
-            stopMusic() {
-                if (this.musicInterval) {
-                    clearInterval(this.musicInterval);
-                    this.musicInterval = null;
-                }
-            }
-
-            toggleSound() {
-                this.soundEnabled = !this.soundEnabled;
-                return this.soundEnabled;
-            }
-
+            stopMusic() { if (this.musicInterval) { clearInterval(this.musicInterval); this.musicInterval = null; } }
+            toggleSound() { this.soundEnabled = !this.soundEnabled; return this.soundEnabled; }
             toggleMusic() {
                 this.musicEnabled = !this.musicEnabled;
-                if (this.musicEnabled) {
-                    this.startMusic();
-                } else {
-                    this.stopMusic();
-                }
+                if (this.musicEnabled) this.startMusic();
+                else this.stopMusic();
                 return this.musicEnabled;
             }
         }
 
-        const soundManager = new SoundManager();
+        const sound = new SoundManager();
 
         // =====================================================
-        // ===== СИСТЕМА СОХРАНЕНИЯ =====
+        // ===== СОХРАНЕНИЕ =====
         // =====================================================
         const SAVE_KEY = 'campGameSave';
 
         function saveGame() {
             try {
-                const saveData = {
-                    score: score,
-                    azotiki: azotiki,
-                    cups: cups,
-                    multiplier: multiplier,
-                    vipMultiplierLevel: vipMultiplierLevel,
-                    multiplierCost: multiplierCost,
-                    catchRadius: catchRadius,
-                    maxChildren: maxChildren,
-                    speedLevel: speedLevel,
-                    costs: costs,
-                    bossCooldown: bossCooldown,
-                    lastBossTime: lastBossTime,
-                    ownedThemes: ownedThemes,
-                    ownedSkins: ownedSkins,
-                    activeTheme: activeTheme,
-                    activeSkin: activeSkin,
-                    dailyTasks: dailyTasks,
-                    lastDailyReset: lastDailyReset,
-                    totalCaught: totalCaught,
-                    totalEarned: totalEarned,
-                    soundEnabled: soundManager.soundEnabled,
-                    musicEnabled: soundManager.musicEnabled,
-                    bonusActive: bonusActive,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
-            } catch (e) {
-                console.warn('Не удалось сохранить:', e);
-            }
+                localStorage.setItem(SAVE_KEY, JSON.stringify({
+                    score, azotiki, cups, multiplier, vipMultiplierLevel, multiplierCost,
+                    catchRadius, maxChildren, speedLevel, costs,
+                    lastBossTime, ownedThemes, ownedSkins, activeTheme, activeSkin,
+                    dailyTasks, lastDailyReset, totalCaught, totalEarned,
+                    soundEnabled: sound.soundEnabled, musicEnabled: sound.musicEnabled,
+                    bonusActive
+                }));
+            } catch(e) {}
         }
 
         function loadGame() {
             try {
-                const saved = localStorage.getItem(SAVE_KEY);
-                if (!saved) return false;
-
-                const data = JSON.parse(saved);
+                const data = JSON.parse(localStorage.getItem(SAVE_KEY));
+                if (!data) return false;
                 score = data.score || 0;
                 azotiki = data.azotiki || 0;
                 cups = data.cups || 0;
@@ -1208,7 +877,6 @@
                 maxChildren = data.maxChildren || 5;
                 speedLevel = data.speedLevel || 1;
                 costs = data.costs || { radius: 50, children: 80, speed: 60 };
-                bossCooldown = data.bossCooldown || 3600;
                 lastBossTime = data.lastBossTime || 0;
                 ownedThemes = data.ownedThemes || [];
                 ownedSkins = data.ownedSkins || [];
@@ -1219,69 +887,36 @@
                 totalCaught = data.totalCaught || 0;
                 totalEarned = data.totalEarned || 0;
                 bonusActive = data.bonusActive || false;
-                
-                if (data.soundEnabled !== undefined) {
-                    soundManager.soundEnabled = data.soundEnabled;
-                }
+
+                if (data.soundEnabled !== undefined) sound.soundEnabled = data.soundEnabled;
                 if (data.musicEnabled !== undefined) {
-                    soundManager.musicEnabled = data.musicEnabled;
-                    if (soundManager.musicEnabled) {
-                        setTimeout(() => soundManager.startMusic(), 2000);
-                    }
+                    sound.musicEnabled = data.musicEnabled;
+                    if (sound.musicEnabled) setTimeout(() => sound.startMusic(), 2500);
                 }
-                
-                if (bonusActive && multiplier < 4) {
-                    multiplier = 4;
-                }
-                
+                if (bonusActive && multiplier < 4) multiplier = 4;
                 checkDailyReset();
                 return true;
-            } catch (e) {
-                return false;
-            }
+            } catch(e) { return false; }
         }
 
         // =====================================================
-        // ===== ПЕРЕМЕННЫЕ ИГРЫ =====
+        // ===== ПЕРЕМЕННЫЕ =====
         // =====================================================
-        let score = 0;
-        let azotiki = 0;
-        let cups = 0;
-        let multiplier = 1;
-        let vipMultiplierLevel = 0;
-        let multiplierCost = 50;
-        let catchRadius = 30;
-        let maxChildren = 5;
-        let speedLevel = 1;
-        let children = [];
-        let spawnTimer = 0;
-        let animationId = null;
-        let bossCooldown = 3600;
-        let lastBossTime = 0;
-        let ownedThemes = [];
-        let ownedSkins = [];
-        let activeTheme = 0;
-        let activeSkin = 0;
-        let dailyTasks = [];
-        let lastDailyReset = Date.now();
-        let totalCaught = 0;
-        let totalEarned = 0;
-        let bonusActive = false;
+        let score = 0, azotiki = 0, cups = 0, multiplier = 1;
+        let vipMultiplierLevel = 0, multiplierCost = 50;
+        let catchRadius = 30, maxChildren = 5, speedLevel = 1;
+        let children = [], spawnTimer = 0, animId = null;
+        let lastBossTime = 0, bossCooldown = 3600;
+        let ownedThemes = [], ownedSkins = [], activeTheme = 0, activeSkin = 0;
+        let dailyTasks = [], lastDailyReset = Date.now();
+        let totalCaught = 0, totalEarned = 0, bonusActive = false;
 
-        let costs = {
-            radius: 50,
-            children: 80,
-            speed: 60
-        };
+        let costs = { radius: 50, children: 80, speed: 60 };
+        const vipPrices = { theme1: 100, theme2: 200, skin1: 150, skin2: 250 };
 
-        const vipPrices = {
-            theme1: 100,
-            theme2: 200,
-            skin1: 150,
-            skin2: 250
-        };
-
-        // --- Canvas ---
+        // =====================================================
+        // ===== CANVAS =====
+        // =====================================================
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
@@ -1292,33 +927,34 @@
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
-        // --- Элементы UI ---
-        const azotikiEl = document.getElementById('azotiki');
-        const cupsEl = document.getElementById('cups');
-        const multiplierEl = document.getElementById('multiplier');
-        const shopAzotikiEl = document.getElementById('shopAzotiki');
-        const shopCupsEl = document.getElementById('shopCups');
-        const shopMultiplierEl = document.getElementById('shopMultiplier');
-        const shopModal = document.getElementById('shopModal');
-        const profileModal = document.getElementById('profileModal');
-        const notification = document.getElementById('notification');
-        let notificationTimeout = null;
+        // =====================================================
+        // ===== UI ЭЛЕМЕНТЫ =====
+        // =====================================================
+        const $ = id => document.getElementById(id);
+        const azotikiEl = $('azotiki'), cupsEl = $('cups'), multiplierEl = $('multiplier');
+        const shopAzotiki = $('shopAzotiki'), shopCups = $('shopCups');
+        const shopModal = $('shopModal'), profileModal = $('profileModal');
+        const notification = $('notification');
+        let notifTimeout = null;
 
-        // --- Фоны ---
+        // =====================================================
+        // ===== ФОНЫ =====
+        // =====================================================
         const themes = {
             0: { name: 'Классический', bg: ['#87CEEB', '#4A90D9'] },
             1: { name: 'Закатный', bg: ['#FF6B6B', '#FFA502'] },
             2: { name: 'Ночной', bg: ['#1a1a2e', '#16213e'] }
         };
 
-        // --- Скины детей ---
         const skins = {
             0: { name: 'Классический', emoji: '👶' },
             1: { name: 'Робот', emoji: '🤖' },
             2: { name: 'Инопланетянин', emoji: '👾' }
         };
 
-        // --- Класс ребёнка ---
+        // =====================================================
+        // ===== КЛАСС РЕБЁНОК =====
+        // =====================================================
         class Child {
             constructor() {
                 this.radius = 18;
@@ -1327,27 +963,21 @@
                 this.y = Math.random() * (canvas.height - this.radius * 2) + this.radius;
                 this.speedX = (Math.random() - 0.5) * maxSpeed * 2;
                 this.speedY = (Math.random() - 0.5) * maxSpeed * 2;
-                this.names = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля', 'Дима', 'Катя', 'Серёжа', 'Таня', 'Миша', 'Лена', 'Вова'];
+                this.names = ['Аня', 'Петя', 'Маша', 'Коля', 'Оля', 'Дима', 'Катя', 'Серёжа', 'Таня', 'Миша'];
                 this.name = this.names[Math.floor(Math.random() * this.names.length)];
-                this.skinType = activeSkin;
                 this.emoji = skins[activeSkin]?.emoji || '👶';
             }
 
             randomColor() {
-                const colors = ['#FF4757', '#FF6B81', '#FFA502', '#2ED573', '#1E90FF', '#A29BFE', '#FD79A8', '#00CEC9', '#F368E0', '#FF9FF3'];
+                const colors = ['#FF4757', '#FF6B81', '#FFA502', '#2ED573', '#1E90FF', '#A29BFE', '#FD79A8', '#00CEC9'];
                 return colors[Math.floor(Math.random() * colors.length)];
             }
 
             move() {
                 this.x += this.speedX;
                 this.y += this.speedY;
-
-                if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) {
-                    this.speedX = -this.speedX;
-                }
-                if (this.y - this.radius <= 0 || this.y + this.radius >= canvas.height) {
-                    this.speedY = -this.speedY;
-                }
+                if (this.x - this.radius <= 0 || this.x + this.radius >= canvas.width) this.speedX = -this.speedX;
+                if (this.y - this.radius <= 0 || this.y + this.radius >= canvas.height) this.speedY = -this.speedY;
             }
 
             draw(ctx) {
@@ -1356,17 +986,15 @@
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillText(this.emoji, this.x, this.y);
-                    
-                    ctx.fillStyle = '#2d3436';
-                    ctx.font = '11px Arial';
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px Arial';
                     ctx.textBaseline = 'bottom';
-                    ctx.shadowColor = 'rgba(255,255,255,0.5)';
+                    ctx.shadowColor = 'rgba(0,0,0,0.8)';
                     ctx.shadowBlur = 4;
                     ctx.fillText(this.name, this.x, this.y + this.radius + 14);
                     ctx.shadowBlur = 0;
                     return;
                 }
-
                 const color = this.randomColor();
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
@@ -1375,7 +1003,6 @@
                 ctx.strokeStyle = '#2d3436';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-
                 ctx.fillStyle = '#2d3436';
                 ctx.beginPath();
                 ctx.arc(this.x - 6, this.y - 4, 3, 0, Math.PI * 2);
@@ -1383,19 +1010,16 @@
                 ctx.beginPath();
                 ctx.arc(this.x + 6, this.y - 4, 3, 0, Math.PI * 2);
                 ctx.fill();
-
                 ctx.beginPath();
                 ctx.arc(this.x, this.y + 2, 8, 0.1, Math.PI - 0.1);
                 ctx.stroke();
-
-                ctx.fillStyle = '#2d3436';
-                ctx.font = '11px Arial';
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Arial';
                 ctx.textAlign = 'center';
-                ctx.shadowColor = 'rgba(255,255,255,0.5)';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
                 ctx.shadowBlur = 4;
                 ctx.fillText(this.name, this.x, this.y + this.radius + 14);
                 ctx.shadowBlur = 0;
-
                 ctx.fillStyle = 'rgba(255,255,255,0.3)';
                 ctx.beginPath();
                 ctx.arc(this.x - 5, this.y - 7, 4, 0, Math.PI * 2);
@@ -1403,113 +1027,92 @@
             }
 
             isClicked(mx, my) {
-                const dx = this.x - mx;
-                const dy = this.y - my;
+                const dx = this.x - mx, dy = this.y - my;
                 return (dx * dx + dy * dy) <= (catchRadius * catchRadius);
             }
         }
 
-        // --- Функции ---
+        // =====================================================
+        // ===== ФУНКЦИИ =====
+        // =====================================================
         function spawnChildren() {
-            while (children.length < maxChildren) {
-                children.push(new Child());
-            }
+            while (children.length < maxChildren) children.push(new Child());
         }
 
-        function showNotification(text, isGood = true) {
+        function showNotification(text, good = true) {
             notification.textContent = text;
-            notification.style.background = isGood ? 'rgba(46, 213, 115, 0.9)' : 'rgba(255, 71, 87, 0.9)';
+            notification.style.background = good ? 'rgba(46,213,115,0.9)' : 'rgba(255,71,87,0.9)';
             notification.classList.remove('hidden');
-            
-            if (notificationTimeout) clearTimeout(notificationTimeout);
-            notificationTimeout = setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 2000);
+            if (notifTimeout) clearTimeout(notifTimeout);
+            notifTimeout = setTimeout(() => notification.classList.add('hidden'), 2000);
         }
 
         function showCatchEffect(x, y) {
-            const effect = document.createElement('div');
-            effect.className = 'catch-effect';
-            effect.style.left = x - 30 + 'px';
-            effect.style.top = y - 30 + 'px';
-            effect.style.width = '60px';
-            effect.style.height = '60px';
-            effect.style.borderRadius = '50%';
-            effect.style.border = '3px solid #FFD700';
-            effect.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6)';
-            document.body.appendChild(effect);
-            setTimeout(() => effect.remove(), 600);
+            const el = document.createElement('div');
+            el.className = 'catch-effect';
+            el.style.cssText = `left:${x-30}px;top:${y-30}px;width:60px;height:60px;border-radius:50%;border:3px solid #FFD700;box-shadow:0 0 40px rgba(255,215,0,0.6);`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 600);
         }
 
         function updateUI() {
             azotikiEl.textContent = azotiki;
             cupsEl.textContent = cups;
             multiplierEl.textContent = 'x' + multiplier;
-            shopAzotikiEl.textContent = azotiki;
-            shopCupsEl.textContent = cups;
-            shopMultiplierEl.textContent = multiplier;
-            
-            document.getElementById('radiusLevel').textContent = catchRadius;
-            document.getElementById('childrenLevel').textContent = maxChildren;
-            document.getElementById('speedLevel').textContent = speedLevel;
-            
-            document.getElementById('buyRadius').disabled = azotiki < costs.radius;
-            document.getElementById('buyChildren').disabled = azotiki < costs.children;
-            document.getElementById('buySpeed').disabled = azotiki < costs.speed;
-            
-            document.querySelector('#buyRadius .cost').textContent = costs.radius;
-            document.querySelector('#buyChildren .cost').textContent = costs.children;
-            document.querySelector('#buySpeed .cost').textContent = costs.speed;
+            shopAzotiki.textContent = azotiki;
+            shopCups.textContent = cups;
 
-            const nextMultiplier = Math.pow(2, vipMultiplierLevel + 1);
-            document.getElementById('vipMultiplierLevel').textContent = multiplier;
-            document.getElementById('vipNextMultiplier').textContent = nextMultiplier;
-            
-            const vipBtn = document.getElementById('buyVipMultiplier');
+            $('radiusLevel').textContent = catchRadius;
+            $('childrenLevel').textContent = maxChildren;
+            $('speedLevel').textContent = speedLevel;
+
+            $('buyRadius').disabled = azotiki < costs.radius;
+            $('buyChildren').disabled = azotiki < costs.children;
+            $('buySpeed').disabled = azotiki < costs.speed;
+            $('buyRadius .cost').textContent = costs.radius;
+            $('buyChildren .cost').textContent = costs.children;
+            $('buySpeed .cost').textContent = costs.speed;
+
+            const next = Math.pow(2, vipMultiplierLevel + 1);
+            $('vipMultiplierLevel').textContent = multiplier;
+            $('vipNextMultiplier').textContent = next;
+            const vipBtn = $('buyVipMultiplier');
             vipBtn.disabled = cups < multiplierCost;
             vipBtn.querySelector('.cost').textContent = multiplierCost;
 
-            document.querySelectorAll('.vip-buy').forEach(btn => {
-                const type = btn.dataset.type;
-                const id = parseInt(btn.dataset.id);
-                if (type === 'theme') {
-                    btn.disabled = ownedThemes.includes(id);
-                } else if (type === 'skin') {
-                    btn.disabled = ownedSkins.includes(id);
-                }
+            document.querySelectorAll('.vip-buy').forEach(b => {
+                const type = b.dataset.type, id = parseInt(b.dataset.id);
+                if (type === 'theme') b.disabled = ownedThemes.includes(id);
+                else if (type === 'skin') b.disabled = ownedSkins.includes(id);
             });
 
-            const bonusBtn = document.getElementById('bonusBtn');
+            const bonusBtn = $('bonusBtn');
             if (bonusActive) {
                 bonusBtn.textContent = '✅ Активен';
                 bonusBtn.style.background = '#2ED573';
                 bonusBtn.disabled = true;
-                document.getElementById('bonusDesc').textContent = '🚀 Бонус x4 активирован!';
+                $('bonusDesc').textContent = '🚀 Бонус x4 активирован!';
             } else {
                 bonusBtn.textContent = 'Получить';
                 bonusBtn.style.background = '#FF4757';
                 bonusBtn.disabled = false;
-                document.getElementById('bonusDesc').textContent = 'Подпишись на канал и получи x4!';
+                $('bonusDesc').textContent = 'Подпишись на канал и получи x4!';
             }
 
-            updateBackground();
-            updateProfileUI();
-        }
+            $('profileAzotiki').textContent = azotiki;
+            $('profileCups').textContent = cups;
+            $('profileMultiplier').textContent = multiplier;
+            $('totalCaught').textContent = totalCaught;
+            $('totalEarned').textContent = totalEarned;
 
-        function updateProfileUI() {
-            document.getElementById('profileAzotiki').textContent = azotiki;
-            document.getElementById('profileCups').textContent = cups;
-            document.getElementById('profileMultiplier').textContent = multiplier;
-            document.getElementById('totalCaught').textContent = totalCaught;
-            document.getElementById('totalEarned').textContent = totalEarned;
-            
-            const soundBtn = document.getElementById('soundToggle');
-            soundBtn.textContent = soundManager.soundEnabled ? 'Вкл' : 'Выкл';
-            soundBtn.className = 'toggle-btn ' + (soundManager.soundEnabled ? 'on' : 'off');
-            
-            const musicBtn = document.getElementById('musicToggle');
-            musicBtn.textContent = soundManager.musicEnabled ? 'Вкл' : 'Выкл';
-            musicBtn.className = 'toggle-btn ' + (soundManager.musicEnabled ? 'on' : 'off');
+            const sBtn = $('soundToggle');
+            sBtn.textContent = sound.soundEnabled ? 'Вкл' : 'Выкл';
+            sBtn.className = 'toggle-btn ' + (sound.soundEnabled ? 'on' : 'off');
+            const mBtn = $('musicToggle');
+            mBtn.textContent = sound.musicEnabled ? 'Вкл' : 'Выкл';
+            mBtn.className = 'toggle-btn ' + (sound.musicEnabled ? 'on' : 'off');
+
+            updateBackground();
         }
 
         function updateBackground() {
@@ -1518,70 +1121,47 @@
         }
 
         // =====================================================
-        // ===== 10 ЗАДАНИЙ ПО УРОВНЯМ СЛОЖНОСТИ =====
+        // ===== 10 ЗАДАНИЙ ПО УРОВНЯМ =====
         // =====================================================
         function generateDailyTasks() {
             return [
-                // Лёгкие (Easy) - 3 задания
                 { id: 1, name: 'Поймать 5 детей', target: 5, progress: 0, reward: 10, difficulty: 'easy', claimed: false },
                 { id: 2, name: 'Поймать 10 детей', target: 10, progress: 0, reward: 20, difficulty: 'easy', claimed: false },
                 { id: 3, name: 'Заработать 50 ⭐', target: 50, progress: 0, reward: 15, difficulty: 'easy', claimed: false },
-                
-                // Средние (Medium) - 3 задания
                 { id: 4, name: 'Поймать 25 детей', target: 25, progress: 0, reward: 50, difficulty: 'medium', claimed: false },
                 { id: 5, name: 'Заработать 150 ⭐', target: 150, progress: 0, reward: 40, difficulty: 'medium', claimed: false },
                 { id: 6, name: 'Поймать 40 детей', target: 40, progress: 0, reward: 75, difficulty: 'medium', claimed: false },
-                
-                // Сложные (Hard) - 2 задания
                 { id: 7, name: 'Поймать 60 детей', target: 60, progress: 0, reward: 120, difficulty: 'hard', claimed: false },
                 { id: 8, name: 'Заработать 400 ⭐', target: 400, progress: 0, reward: 100, difficulty: 'hard', claimed: false },
-                
-                // Эксперт (Expert) - 1 задание
                 { id: 9, name: 'Поймать 100 детей', target: 100, progress: 0, reward: 200, difficulty: 'expert', claimed: false },
-                
-                // Легендарный (Legendary) - 1 задание
                 { id: 10, name: 'Заработать 1000 ⭐', target: 1000, progress: 0, reward: 350, difficulty: 'legendary', claimed: false }
             ];
         }
 
         function checkDailyReset() {
-            const now = Date.now();
-            if (now - lastDailyReset > 86400000) {
+            if (Date.now() - lastDailyReset > 86400000) {
                 dailyTasks = generateDailyTasks();
-                lastDailyReset = now;
+                lastDailyReset = Date.now();
                 saveGame();
             }
         }
 
         function renderDailyTasks() {
-            const container = document.getElementById('dailyTasks');
+            const container = $('dailyTasks');
             container.innerHTML = '';
-            
-            const difficultyOrder = { easy: 0, medium: 1, hard: 2, expert: 3, legendary: 4 };
-            const sortedTasks = [...dailyTasks].sort((a, b) => difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]);
-            
-            const diffLabels = {
-                easy: '🟢 Лёгкое',
-                medium: '🟡 Среднее',
-                hard: '🔴 Сложное',
-                expert: '🟣 Эксперт',
-                legendary: '⭐ Легендарное'
-            };
-            
-            sortedTasks.forEach(task => {
-                const div = document.createElement('div');
+            const order = { easy: 0, medium: 1, hard: 2, expert: 3, legendary: 4 };
+            const labels = { easy: '🟢 Лёгкое', medium: '🟡 Среднее', hard: '🔴 Сложное', expert: '🟣 Эксперт', legendary: '⭐ Легендарное' };
+
+            [...dailyTasks].sort((a, b) => order[a.difficulty] - order[b.difficulty]).forEach(task => {
                 const completed = task.progress >= task.target;
-                
+                const div = document.createElement('div');
                 div.className = `daily-task ${task.difficulty}`;
                 div.innerHTML = `
                     <div class="task-info">
-                        <div class="task-name">
-                            ${task.name}
-                            <span class="difficulty-badge ${task.difficulty}">${diffLabels[task.difficulty]}</span>
-                        </div>
+                        <div class="task-name">${task.name} <span class="difficulty-badge ${task.difficulty}">${labels[task.difficulty]}</span></div>
                         <div class="task-progress">${Math.min(task.progress, task.target)}/${task.target}</div>
                     </div>
-                    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                    <div style="display:flex;align-items:center;gap:6px;">
                         <span class="task-reward">+${task.reward} 🏆</span>
                         <button class="claim-btn" ${task.claimed || !completed ? 'disabled' : ''} data-task="${task.id}">
                             ${task.claimed ? '✅' : completed ? 'Забрать' : '⏳'}
@@ -1591,67 +1171,61 @@
                 container.appendChild(div);
             });
 
-            container.querySelectorAll('.claim-btn').forEach(btn => {
-                if (!btn.disabled) {
-                    btn.addEventListener('click', function() {
-                        const taskId = parseInt(this.dataset.task);
-                        const task = dailyTasks.find(t => t.id === taskId);
-                        if (task && task.progress >= task.target && !task.claimed) {
-                            task.claimed = true;
-                            cups += task.reward;
-                            showNotification(`🎉 +${task.reward} 🏆 (${task.difficulty})!`);
-                            updateUI();
-                            saveGame();
-                            renderDailyTasks();
-                        }
-                    });
-                }
+            container.querySelectorAll('.claim-btn:not([disabled])').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const task = dailyTasks.find(t => t.id === parseInt(this.dataset.task));
+                    if (task && task.progress >= task.target && !task.claimed) {
+                        task.claimed = true;
+                        cups += task.reward;
+                        showNotification(`🎉 +${task.reward} 🏆 (${task.difficulty})!`);
+                        updateUI();
+                        saveGame();
+                        renderDailyTasks();
+                    }
+                });
             });
         }
 
-        // --- Босс ---
+        // =====================================================
+        // ===== БОСС =====
+        // =====================================================
         function spawnBoss() {
             const now = Date.now();
-            const timeSinceLastBoss = (now - lastBossTime) / 1000;
+            const elapsed = (now - lastBossTime) / 1000;
 
             if (azotiki < 50000) {
                 showNotification('❌ Нужно 50,000 ⭐!', false);
                 return;
             }
-
-            if (timeSinceLastBoss < bossCooldown) {
-                const remaining = Math.floor(bossCooldown - timeSinceLastBoss);
-                const minutes = Math.floor(remaining / 60);
-                showNotification(`⏳ Босс через ${minutes}м`, false);
+            if (elapsed < bossCooldown) {
+                const min = Math.floor((bossCooldown - elapsed) / 60);
+                showNotification(`⏳ Босс через ${min}м`, false);
                 return;
             }
 
             azotiki -= 50000;
-            const bossReward = Math.floor(1000 + Math.random() * 2000);
-            cups += bossReward;
+            const reward = Math.floor(1000 + Math.random() * 2000);
+            cups += reward;
             lastBossTime = now;
 
-            const bossEl = document.createElement('div');
-            bossEl.className = 'boss-notification';
-            bossEl.textContent = '👾 БОСС! +' + bossReward + ' 🏆';
-            document.body.appendChild(bossEl);
-            setTimeout(() => bossEl.remove(), 3000);
+            const el = document.createElement('div');
+            el.className = 'boss-notification';
+            el.textContent = '👾 БОСС! +' + reward + ' 🏆';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 3000);
 
-            showNotification(`👾 +${bossReward} 🏆`);
+            showNotification(`👾 +${reward} 🏆`);
             updateUI();
             saveGame();
-            updateBossButton();
+            updateBossBtn();
         }
 
-        function updateBossButton() {
-            const now = Date.now();
-            const timeSinceLastBoss = (now - lastBossTime) / 1000;
-            const remaining = Math.max(0, bossCooldown - timeSinceLastBoss);
-            
-            const btn = document.getElementById('bossBtn');
+        function updateBossBtn() {
+            const elapsed = (Date.now() - lastBossTime) / 1000;
+            const remaining = Math.max(0, bossCooldown - elapsed);
+            const btn = $('bossBtn');
             if (remaining > 0) {
-                const minutes = Math.floor(remaining / 60);
-                btn.textContent = `⏳${minutes}m`;
+                btn.textContent = `⏳${Math.floor(remaining/60)}m`;
                 btn.style.opacity = '0.5';
             } else {
                 btn.textContent = '👾';
@@ -1659,53 +1233,48 @@
             }
         }
 
-        // --- Перерождение ---
+        // =====================================================
+        // ===== ПЕРЕРОЖДЕНИЕ =====
+        // =====================================================
         function doRebirth() {
             if (azotiki < 1000000) {
-                showNotification(`❌ Нужно 1,000,000 ⭐!`, false);
+                showNotification('❌ Нужно 1,000,000 ⭐!', false);
                 return;
             }
-
-            if (!confirm(`🔄 Перерождение за 1,000,000 ⭐!\nМножитель x${multiplier} → x${multiplier * 2}`)) {
-                return;
-            }
+            if (!confirm(`🔄 Перерождение за 1,000,000 ⭐!\nМножитель x${multiplier} → x${multiplier * 2}`)) return;
 
             azotiki -= 1000000;
             multiplier *= 2;
-            
             catchRadius = 30;
             maxChildren = 5;
             speedLevel = 1;
             costs = { radius: 50, children: 80, speed: 60 };
-            
             children = [];
             spawnChildren();
-
             showNotification(`✨ Множитель x${multiplier}!`);
             updateUI();
             saveGame();
         }
 
-        // --- Бонус x4 ---
+        // =====================================================
+        // ===== БОНУС X4 =====
+        // =====================================================
         function activateBonus() {
             if (bonusActive) {
-                showNotification('✅ Бонус уже активен!', true);
+                showNotification('✅ Бонус уже активен!');
                 return;
             }
-
             window.open('https://t.me/kaminsd', '_blank');
-            
             bonusActive = true;
-            if (multiplier < 4) {
-                multiplier = 4;
-            }
-            
-            showNotification('🚀 Бонус x4 активирован!', true);
+            if (multiplier < 4) multiplier = 4;
+            showNotification('🚀 Бонус x4 активирован!');
             updateUI();
             saveGame();
         }
 
-        // --- VIP Множитель ---
+        // =====================================================
+        // ===== VIP МНОЖИТЕЛЬ =====
+        // =====================================================
         function buyVipMultiplier() {
             if (cups >= multiplierCost) {
                 cups -= multiplierCost;
@@ -1720,72 +1289,66 @@
             }
         }
 
-        // --- Обработка кликов ---
+        // =====================================================
+        // ===== ОБРАБОТКА КЛИКОВ =====
+        // =====================================================
         function handleCanvasClick(e) {
             e.preventDefault();
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
-            
-            let clientX, clientY;
+
+            let cx, cy;
             if (e.touches) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
+                cx = e.touches[0].clientX;
+                cy = e.touches[0].clientY;
                 e.preventDefault();
             } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
+                cx = e.clientX;
+                cy = e.clientY;
             }
-            
-            const x = (clientX - rect.left) * scaleX;
-            const y = (clientY - rect.top) * scaleY;
+
+            const x = (cx - rect.left) * scaleX;
+            const y = (cy - rect.top) * scaleY;
 
             let caught = false;
             for (let i = children.length - 1; i >= 0; i--) {
                 if (children[i].isClicked(x, y)) {
-                    const caughtChild = children[i];
+                    const child = children[i];
                     children.splice(i, 1);
                     const reward = Math.floor(1 * multiplier);
                     azotiki += reward;
                     score++;
                     totalCaught++;
                     totalEarned += reward;
-                    
-                    soundManager.playCatchSound();
-                    
-                    dailyTasks.forEach(task => {
-                        if (!task.claimed && task.progress < task.target) {
-                            if (task.name.includes('Поймать')) {
-                                task.progress++;
-                            }
-                            if (task.name.includes('Заработать')) {
-                                task.progress += reward;
-                            }
+
+                    sound.playCatchSound();
+
+                    dailyTasks.forEach(t => {
+                        if (!t.claimed && t.progress < t.target) {
+                            if (t.name.includes('Поймать')) t.progress++;
+                            if (t.name.includes('Заработать')) t.progress += reward;
                         }
                     });
 
-                    showCatchEffect(clientX, clientY);
+                    showCatchEffect(cx, cy);
                     showNotification(`🎉 +${reward} ⭐ (x${multiplier})`);
-                    
-                    if (children.length < maxChildren) {
-                        children.push(new Child());
-                    }
-                    
+
+                    if (children.length < maxChildren) children.push(new Child());
                     caught = true;
                     saveGame();
                     break;
                 }
             }
-            
-            if (!caught) {
-                showNotification('😅 Мимо!', false);
-            }
-            
+
+            if (!caught) showNotification('😅 Мимо!', false);
             updateUI();
             renderDailyTasks();
         }
 
-        // --- Игровой цикл ---
+        // =====================================================
+        // ===== ИГРОВОЙ ЦИКЛ =====
+        // =====================================================
         function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -1795,67 +1358,48 @@
                 spawnTimer = 0;
             }
 
-            for (let i = children.length - 1; i >= 0; i--) {
-                children[i].move();
-                children[i].draw(ctx);
+            for (const child of children) {
+                child.move();
+                child.draw(ctx);
             }
 
-            ctx.fillStyle = 'rgba(255,255,255,0.2)';
-            ctx.font = '13px Arial';
+            ctx.fillStyle = 'rgba(255,255,255,0.15)';
+            ctx.font = '14px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('👆 Лови детей!', canvas.width / 2, canvas.height - 25);
+            ctx.fillText('👆 Лови детей!', canvas.width / 2, canvas.height - 30);
 
             updateUI();
-            updateBossButton();
-            animationId = requestAnimationFrame(gameLoop);
+            updateBossBtn();
+            animId = requestAnimationFrame(gameLoop);
         }
 
-        // --- Скрытие заставки ---
-        setTimeout(() => {
-            const splash = document.getElementById('splashScreen');
-            splash.classList.add('hidden');
-        }, 2500);
-
-        // --- События ---
+        // =====================================================
+        // ===== СОБЫТИЯ =====
+        // =====================================================
         canvas.addEventListener('click', handleCanvasClick);
         canvas.addEventListener('touchstart', handleCanvasClick, { passive: false });
 
+        // --- Скрытие заставки ---
+        setTimeout(() => {
+            document.getElementById('splashScreen').classList.add('hidden');
+        }, 2800);
+
         // --- Магазин ---
-        document.getElementById('shopBtn').addEventListener('click', () => {
+        $('shopBtn').addEventListener('click', () => {
             shopModal.classList.remove('hidden');
             renderDailyTasks();
             updateUI();
         });
-
-        document.getElementById('closeShop').addEventListener('click', () => {
-            shopModal.classList.add('hidden');
-            saveGame();
-        });
-
-        shopModal.addEventListener('click', (e) => {
-            if (e.target === shopModal) {
-                shopModal.classList.add('hidden');
-                saveGame();
-            }
-        });
+        $('closeShop').addEventListener('click', () => shopModal.classList.add('hidden'));
+        shopModal.addEventListener('click', e => { if (e.target === shopModal) shopModal.classList.add('hidden'); });
 
         // --- Профиль ---
-        document.getElementById('profileBtn').addEventListener('click', () => {
+        $('profileBtn').addEventListener('click', () => {
             profileModal.classList.remove('hidden');
             updateUI();
         });
-
-        document.getElementById('closeProfile').addEventListener('click', () => {
-            profileModal.classList.add('hidden');
-            saveGame();
-        });
-
-        profileModal.addEventListener('click', (e) => {
-            if (e.target === profileModal) {
-                profileModal.classList.add('hidden');
-                saveGame();
-            }
-        });
+        $('closeProfile').addEventListener('click', () => profileModal.classList.add('hidden'));
+        profileModal.addEventListener('click', e => { if (e.target === profileModal) profileModal.classList.add('hidden'); });
 
         // --- Табы ---
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1869,7 +1413,7 @@
         });
 
         // --- Улучшения ---
-        document.getElementById('buyRadius').addEventListener('click', () => {
+        $('buyRadius').addEventListener('click', () => {
             if (azotiki >= costs.radius) {
                 azotiki -= costs.radius;
                 catchRadius += 5;
@@ -1877,12 +1421,10 @@
                 showNotification('📏 Радиус увеличен!');
                 updateUI();
                 saveGame();
-            } else {
-                showNotification('❌ Не хватает!', false);
-            }
+            } else showNotification('❌ Не хватает!', false);
         });
 
-        document.getElementById('buyChildren').addEventListener('click', () => {
+        $('buyChildren').addEventListener('click', () => {
             if (azotiki >= costs.children) {
                 azotiki -= costs.children;
                 maxChildren += 1;
@@ -1891,12 +1433,10 @@
                 spawnChildren();
                 updateUI();
                 saveGame();
-            } else {
-                showNotification('❌ Не хватает!', false);
-            }
+            } else showNotification('❌ Не хватает!', false);
         });
 
-        document.getElementById('buySpeed').addEventListener('click', () => {
+        $('buySpeed').addEventListener('click', () => {
             if (azotiki >= costs.speed) {
                 azotiki -= costs.speed;
                 speedLevel += 1;
@@ -1904,34 +1444,30 @@
                 showNotification('⚡ Быстрее!');
                 const maxSpeed = 2 + speedLevel * 0.5;
                 children.forEach(child => {
-                    const currentSpeed = Math.sqrt(child.speedX * child.speedX + child.speedY * child.speedY);
-                    if (currentSpeed > 0) {
-                        const ratio = maxSpeed / currentSpeed;
+                    const cur = Math.sqrt(child.speedX * child.speedX + child.speedY * child.speedY);
+                    if (cur > 0) {
+                        const ratio = maxSpeed / cur;
                         child.speedX *= ratio;
                         child.speedY *= ratio;
                     }
                 });
                 updateUI();
                 saveGame();
-            } else {
-                showNotification('❌ Не хватает!', false);
-            }
+            } else showNotification('❌ Не хватает!', false);
         });
 
-        // --- VIP Множитель ---
-        document.getElementById('buyVipMultiplier').addEventListener('click', buyVipMultiplier);
+        // --- VIP ---
+        $('buyVipMultiplier').addEventListener('click', buyVipMultiplier);
 
-        // --- VIP покупки ---
         document.querySelectorAll('.vip-buy').forEach(btn => {
             btn.addEventListener('click', function() {
                 const type = this.dataset.type;
                 const id = parseInt(this.dataset.id);
-                let price = 0;
-                let key = '';
+                let price, key = type + id;
+                price = vipPrices[key];
+                if (!price) return;
 
                 if (type === 'theme') {
-                    key = 'theme' + id;
-                    price = vipPrices[key];
                     if (ownedThemes.includes(id)) {
                         activeTheme = id;
                         showNotification('🎨 Тема применена!');
@@ -1940,8 +1476,6 @@
                         return;
                     }
                 } else if (type === 'skin') {
-                    key = 'skin' + id;
-                    price = vipPrices[key];
                     if (ownedSkins.includes(id)) {
                         activeSkin = id;
                         showNotification('👾 Скин применён!');
@@ -1970,7 +1504,6 @@
                     children = [];
                     spawnChildren();
                 }
-
                 updateUI();
                 saveGame();
                 renderDailyTasks();
@@ -1978,16 +1511,16 @@
         });
 
         // --- Звук и музыка ---
-        document.getElementById('soundToggle').addEventListener('click', function() {
-            const enabled = soundManager.toggleSound();
+        $('soundToggle').addEventListener('click', function() {
+            const enabled = sound.toggleSound();
             this.textContent = enabled ? 'Вкл' : 'Выкл';
             this.className = 'toggle-btn ' + (enabled ? 'on' : 'off');
             showNotification(enabled ? '🔊 Звуки включены' : '🔇 Звуки выключены');
             saveGame();
         });
 
-        document.getElementById('musicToggle').addEventListener('click', function() {
-            const enabled = soundManager.toggleMusic();
+        $('musicToggle').addEventListener('click', function() {
+            const enabled = sound.toggleMusic();
             this.textContent = enabled ? 'Вкл' : 'Выкл';
             this.className = 'toggle-btn ' + (enabled ? 'on' : 'off');
             showNotification(enabled ? '🎵 Музыка включена' : '🎵 Музыка выключена');
@@ -1995,26 +1528,20 @@
         });
 
         // --- Бонус ---
-        document.getElementById('bonusBtn').addEventListener('click', activateBonus);
+        $('bonusBtn').addEventListener('click', activateBonus);
 
         // --- Босс ---
-        document.getElementById('bossBtn').addEventListener('click', spawnBoss);
+        $('bossBtn').addEventListener('click', spawnBoss);
 
         // --- Перерождение ---
-        document.getElementById('rebirthBtn').addEventListener('click', doRebirth);
+        $('rebirthBtn').addEventListener('click', doRebirth);
 
-        // --- Техподдержка ---
-        document.getElementById('supportBtn').addEventListener('click', function(e) {
-            e.preventDefault();
-            window.open('https://t.me/Dmitriymikha', '_blank');
-        });
-
-        // --- Автосохранение ---
+        // =====================================================
+        // ===== АВТОСОХРАНЕНИЕ =====
+        // =====================================================
         setInterval(saveGame, 5000);
         window.addEventListener('beforeunload', saveGame);
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) saveGame();
-        });
+        document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); });
 
         // =====================================================
         // ===== ЗАПУСК =====
@@ -2022,19 +1549,14 @@
         loadGame();
         spawnChildren();
         updateUI();
-        updateBossButton();
+        updateBossBtn();
         gameLoop();
         renderDailyTasks();
 
-        if (soundManager.musicEnabled) {
-            setTimeout(() => soundManager.startMusic(), 2500);
-        }
+        if (sound.musicEnabled) setTimeout(() => sound.startMusic(), 3000);
 
-        console.log('🏕️ Лагерь Звёздный запущен!');
-        console.log('⭐ Азотиков:', azotiki);
-        console.log('🏆 Кубков:', cups);
-        console.log('✨ Множитель: x' + multiplier);
-        console.log('🎵 Энергичная музыка!');
+        console.log('🏕️ Купалинка запущен!');
+        console.log('⭐', azotiki, '🏆', cups, '✨ x' + multiplier);
     </script>
 </body>
 </html>
