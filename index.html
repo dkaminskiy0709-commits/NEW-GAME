@@ -1,44 +1,73 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 """
-MOVE-TO-EARN TELEGRAM BOT
-Полный бот для заработка токенов за шаги
+🤖 MOVE-TO-EARN TELEGRAM БОТ
+Версия: 1.0
+Полный скрипт для заработка токенов за шаги
 """
 
 import logging
 import sqlite3
 import datetime
-from datetime import timedelta
 import json
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+import os
+import sys
+from typing import Optional, Dict, Any, Tuple, List
 
-# ===================== НАСТРОЙКИ =====================
-# 🔑 ВСТАВЬТЕ СВОЙ ТОКЕН СЮДА (получите у @BotFather)
-BOT_TOKEN = "ВАШ_ТОКЕН_ОТ_BOTFATHER"
+# ===================== ИМПОРТЫ TELEGRAM =====================
+try:
+    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+    from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+except ImportError:
+    print("❌ Ошибка: Не установлена библиотека python-telegram-bot")
+    print("📦 Установите: pip install python-telegram-bot")
+    sys.exit(1)
 
-# 🆔 Ваш Telegram ID (напишите @userinfobot чтобы узнать)
-ADMIN_ID = 123456789  # ЗАМЕНИТЕ НА СВОЙ ID
+# ============================================================
+# ===================== НАСТРОЙКИ ============================
+# ============================================================
 
-# Настройки валюты
+# 🔑 ТОКЕН БОТА - ПОЛУЧИТЕ У @BotFather
+BOT_TOKEN = "ВАШ_ТОКЕН_ОТ_BOTFATHER"  # ЗАМЕНИТЕ НА СВОЙ!
+
+# 🆔 ID АДМИНИСТРАТОРА - УЗНАЙТЕ У @userinfobot
+ADMIN_ID = 123456789  # ЗАМЕНИТЕ НА СВОЙ!
+
+# 📊 НАСТРОЙКИ ВАЛЮТЫ
 TOKEN_NAME = "$ACTI"
-TOKEN_IMAGE = "🎯"
+TOKEN_EMOJI = "🎯"
+STEPS_TO_TOKENS = 0.01  # 1 шаг = 0.01 токена
+MAX_DAILY_STEPS = 10000  # Максимум шагов в день
+REFERRAL_PERCENT = 0.10  # 10% от заработка реферала
+START_BONUS = 5.0  # Стартовый бонус в токенах
 
-# Награда за шаги (1 шаг = 0.01 токена)
-STEPS_TO_TOKENS_RATE = 0.01
+# ============================================================
+# ===================== БАЗА ДАННЫХ ==========================
+# ============================================================
 
-# Ежедневный лимит шагов
-MAX_DAILY_STEPS = 10000
-
-# Реферальный бонус (10%)
-REFERRAL_BONUS = 0.1
-
-# ===================== БАЗА ДАННЫХ =====================
 class Database:
-    def __init__(self, db_name="data.db"):
-        self.conn = sqlite3.connect(db_name, check_same_thread=False)
-        self.cursor = self.conn.cursor()
-        self.create_tables()
+    """Класс для работы с SQLite базой данных"""
+    
+    def __init__(self, db_file: str = "data.db"):
+        self.db_file = db_file
+        self.conn = None
+        self.cursor = None
+        self.init_db()
+    
+    def init_db(self):
+        """Инициализация базы данных и создание таблиц"""
+        try:
+            self.conn = sqlite3.connect(self.db_file, check_same_thread=False)
+            self.cursor = self.conn.cursor()
+            self.create_tables()
+            print("✅ База данных подключена успешно")
+        except Exception as e:
+            print(f"❌ Ошибка подключения к БД: {e}")
+            sys.exit(1)
     
     def create_tables(self):
+        """Создание всех необходимых таблиц"""
         # Таблица пользователей
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
@@ -51,7 +80,8 @@ class Database:
                 referrer_id INTEGER DEFAULT 0,
                 joined_date TEXT,
                 steps_today INTEGER DEFAULT 0,
-                last_step_update TEXT
+                last_step_update TEXT,
+                daily_bonus_taken INTEGER DEFAULT 0
             )
         ''')
         
@@ -78,37 +108,89 @@ class Database:
             )
         ''')
         
+        # Таблица заданий
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS tasks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT,
+                description TEXT,
+                reward REAL,
+                task_type TEXT,
+                is_active INTEGER DEFAULT 1
+            )
+        ''')
+        
         self.conn.commit()
+        print("✅ Таблицы созданы/проверены")
     
-    def register_user(self, user_id, username, first_name, last_name, referrer_id=0):
+    # --- РАБОТА С ПОЛЬЗОВАТЕЛЯМИ ---
+    
+    def register_user(self, user_id: int, username: str, first_name: str, last_name: str, referrer_id: int = 0) -> bool:
+        """Регистрация нового пользователя"""
         try:
+            # Проверяем, существует ли пользователь
+            self.cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
+            if self.cursor.fetchone():
+                return True
+            
+            # Регистрируем пользователя
             self.cursor.execute(
-                "INSERT OR IGNORE INTO users (user_id, username, first_name, last_name, referrer_id, joined_date) VALUES (?, ?, ?, ?, ?, ?)",
+                """INSERT INTO users 
+                   (user_id, username, first_name, last_name, referrer_id, joined_date) 
+                   VALUES (?, ?, ?, ?, ?, ?)""",
                 (user_id, username, first_name, last_name, referrer_id, datetime.datetime.now().isoformat())
             )
             self.conn.commit()
             
+            # Начисляем стартовый бонус
+            self.add_transaction(user_id, START_BONUS, "bonus", "Стартовый бонус")
+            self.cursor.execute(
+                "UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE user_id = ?",
+                (START_BONUS, START_BONUS, user_id)
+            )
+            self.conn.commit()
+            
+            # Начисляем бонус рефереру
             if referrer_id > 0:
+                self.cursor.execute(
+                    "UPDATE users SET balance = balance + 1 WHERE user_id = ?",
+                    (referrer_id,)
+                )
+                self.conn.commit()
                 self.add_transaction(referrer_id, 1.0, "referral", f"Бонус за приглашение {first_name}")
             
             return True
         except Exception as e:
-            print(f"Ошибка регистрации: {e}")
+            print(f"❌ Ошибка регистрации: {e}")
             return False
     
-    def get_user(self, user_id):
+    def get_user(self, user_id: int) -> Optional[Tuple]:
+        """Получение данных пользователя"""
         self.cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
         return self.cursor.fetchone()
     
-    def update_steps(self, user_id, steps):
+    def update_username(self, user_id: int, username: str):
+        """Обновление username пользователя"""
+        self.cursor.execute(
+            "UPDATE users SET username = ? WHERE user_id = ?",
+            (username, user_id)
+        )
+        self.conn.commit()
+    
+    # --- РАБОТА С ШАГАМИ ---
+    
+    def update_steps(self, user_id: int, steps: int) -> float:
+        """Обновление шагов и начисление токенов"""
         user = self.get_user(user_id)
         if not user:
-            return False
+            return 0.0
         
-        steps_today = user[7] if user[7] else 0
-        last_update = user[8] if user[8] else ""
+        steps_today = user[7] or 0
+        last_update = user[8] or ""
         
         today = datetime.datetime.now().date()
+        
+        # Проверяем, был ли уже сегодня вход
         if last_update:
             last_date = datetime.datetime.fromisoformat(last_update).date()
             if last_date == today:
@@ -118,69 +200,122 @@ class Database:
         else:
             new_steps = min(steps, MAX_DAILY_STEPS)
         
-        earned_tokens = (new_steps - steps_today) * STEPS_TO_TOKENS_RATE if steps_today > 0 else new_steps * STEPS_TO_TOKENS_RATE
+        # Вычисляем заработанные токены
+        earned = (new_steps - steps_today) * STEPS_TO_TOKENS
         
-        if earned_tokens > 0:
+        if earned > 0:
+            # Обновляем баланс
             self.cursor.execute(
-                "UPDATE users SET steps_today = ?, last_step_update = ?, balance = balance + ?, total_earned = total_earned + ? WHERE user_id = ?",
-                (new_steps, datetime.datetime.now().isoformat(), earned_tokens, earned_tokens, user_id)
+                """UPDATE users 
+                   SET steps_today = ?, last_step_update = ?, 
+                       balance = balance + ?, total_earned = total_earned + ? 
+                   WHERE user_id = ?""",
+                (new_steps, datetime.datetime.now().isoformat(), earned, earned, user_id)
             )
             self.conn.commit()
             
-            self.add_transaction(user_id, earned_tokens, "steps", f"Начисление за {new_steps} шагов")
+            # Записываем транзакцию
+            self.add_transaction(user_id, earned, "steps", f"Шаги: {new_steps - steps_today}")
             
-            if user[5] > 0:
-                bonus = earned_tokens * REFERRAL_BONUS
+            # Начисляем бонус рефереру
+            if user[5] > 0:  # Если есть реферер
+                bonus = earned * REFERRAL_PERCENT
                 self.cursor.execute(
                     "UPDATE users SET balance = balance + ? WHERE user_id = ?",
                     (bonus, user[5])
                 )
                 self.conn.commit()
-                self.add_transaction(user[5], bonus, "referral_bonus", f"Бонус за шаги реферала {user_id}")
+                self.add_transaction(user[5], bonus, "referral_bonus", f"Бонус от реферала {user_id}")
             
-            return earned_tokens
-        return 0
+            return earned
+        
+        return 0.0
     
-    def add_transaction(self, user_id, amount, type, description):
+    # --- ТРАНЗАКЦИИ ---
+    
+    def add_transaction(self, user_id: int, amount: float, trans_type: str, description: str):
+        """Добавление транзакции"""
         self.cursor.execute(
-            "INSERT INTO transactions (user_id, amount, type, description, date) VALUES (?, ?, ?, ?, ?)",
-            (user_id, amount, type, description, datetime.datetime.now().isoformat())
+            """INSERT INTO transactions (user_id, amount, type, description, date) 
+               VALUES (?, ?, ?, ?, ?)""",
+            (user_id, amount, trans_type, description, datetime.datetime.now().isoformat())
         )
         self.conn.commit()
     
-    def get_leaderboard(self, limit=10):
+    def get_transactions(self, user_id: int, limit: int = 10) -> List[Tuple]:
+        """Получение последних транзакций пользователя"""
         self.cursor.execute(
-            "SELECT user_id, first_name, balance FROM users ORDER BY balance DESC LIMIT ?",
+            """SELECT amount, type, description, date FROM transactions 
+               WHERE user_id = ? ORDER BY date DESC LIMIT ?""",
+            (user_id, limit)
+        )
+        return self.cursor.fetchall()
+    
+    # --- РЕФЕРАЛЫ ---
+    
+    def get_referrals_count(self, user_id: int) -> int:
+        """Количество рефералов"""
+        self.cursor.execute("SELECT COUNT(*) FROM users WHERE referrer_id = ?", (user_id,))
+        return self.cursor.fetchone()[0]
+    
+    def get_referrals_list(self, user_id: int, limit: int = 10) -> List[Tuple]:
+        """Список рефералов"""
+        self.cursor.execute(
+            """SELECT user_id, first_name, total_earned FROM users 
+               WHERE referrer_id = ? ORDER BY total_earned DESC LIMIT ?""",
+            (user_id, limit)
+        )
+        return self.cursor.fetchall()
+    
+    # --- СТАТИСТИКА ---
+    
+    def get_leaderboard(self, limit: int = 10) -> List[Tuple]:
+        """Таблица лидеров"""
+        self.cursor.execute(
+            """SELECT user_id, first_name, balance, total_earned FROM users 
+               ORDER BY balance DESC LIMIT ?""",
             (limit,)
         )
         return self.cursor.fetchall()
     
-    def get_user_stats(self, user_id):
-        user = self.get_user(user_id)
-        if not user:
-            return None
-        
-        return {
-            'balance': user[3],
-            'total_earned': user[4],
-            'steps_today': user[7] or 0,
-            'referrals': self.get_referrals_count(user_id)
-        }
-    
-    def get_referrals_count(self, user_id):
-        self.cursor.execute("SELECT COUNT(*) FROM users WHERE referrer_id = ?", (user_id,))
+    def get_total_users(self) -> int:
+        """Общее количество пользователей"""
+        self.cursor.execute("SELECT COUNT(*) FROM users")
         return self.cursor.fetchone()[0]
     
-    def get_referral_bonus(self, user_id):
-        self.cursor.execute("SELECT SUM(earned_amount) FROM referrals WHERE referrer_id = ?", (user_id,))
+    def get_total_balance(self) -> float:
+        """Общий баланс всех пользователей"""
+        self.cursor.execute("SELECT SUM(balance) FROM users")
         result = self.cursor.fetchone()[0]
-        return result if result else 0
+        return result if result else 0.0
+    
+    def get_total_earned(self) -> float:
+        """Общая сумма заработанного"""
+        self.cursor.execute("SELECT SUM(total_earned) FROM users")
+        result = self.cursor.fetchone()[0]
+        return result if result else 0.0
+    
+    # --- ДОПОЛНИТЕЛЬНО ---
+    
+    def reset_daily_steps(self):
+        """Сброс ежедневных шагов для всех пользователей"""
+        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).date().isoformat()
+        self.cursor.execute(
+            "UPDATE users SET steps_today = 0 WHERE last_step_update < ?",
+            (yesterday,)
+        )
+        self.conn.commit()
     
     def close(self):
-        self.conn.close()
+        """Закрытие соединения с БД"""
+        if self.conn:
+            self.conn.close()
 
-# ===================== БОТ =====================
-# Настройка логов
+# ============================================================
+# ===================== ОСНОВНОЙ БОТ ========================
+# ============================================================
+
+# Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -190,103 +325,115 @@ logger = logging.getLogger(__name__)
 # Инициализация базы данных
 db = Database()
 
-# ===================== КОМАНДЫ =====================
+# ============================================================
+# ===================== ОБРАБОТЧИКИ ==========================
+# ============================================================
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Приветственное сообщение с заставкой"""
     user = update.effective_user
     
+    # Проверяем реферальный параметр
     referrer_id = None
     if context.args and context.args[0].isdigit():
         referrer_id = int(context.args[0])
+        if referrer_id == user.id:
+            referrer_id = 0
     
+    # Регистрируем пользователя
     db.register_user(
         user.id,
-        user.username,
-        user.first_name,
-        user.last_name,
+        user.username or "",
+        user.first_name or "Пользователь",
+        user.last_name or "",
         referrer_id or 0
     )
     
-    # Начисляем стартовый бонус
-    db.add_transaction(user.id, 5.0, "bonus", "Бонус за регистрацию")
-    db.cursor.execute("UPDATE users SET balance = balance + 5, total_earned = total_earned + 5 WHERE user_id = ?", (user.id,))
-    db.conn.commit()
+    # Получаем данные пользователя
+    user_data = db.get_user(user.id)
+    balance = user_data[3] if user_data else 0
+    total_earned = user_data[4] if user_data else 0
+    referrals = db.get_referrals_count(user.id)
+    steps_today = user_data[7] if user_data else 0
     
-    # Приветственное сообщение с заставкой
+    # Текст приветствия
     welcome_text = f"""
-🎯 **ДОБРО ПОЖАЛОВАТЬ В MOVE-TO-EARN!** 🎯
+{TOKEN_EMOJI} **ДОБРО ПОЖАЛОВАТЬ В MOVE-TO-EARN!** {TOKEN_EMOJI}
 
-{TOKEN_IMAGE} Привет, {user.first_name}!
+Привет, **{user.first_name}**!
 
-Ты только что начал свой путь к заработку на спорте!
-С этим ботом ты будешь зарабатывать токены {TOKEN_NAME} просто за активность.
+Зарабатывай {TOKEN_NAME} просто за активность! 🏃
 
-🏃 **Как это работает:**
-1️⃣ Нажми кнопку "Шагомер" и добавь шаги
-2️⃣ Получай {TOKEN_NAME} за каждые 100 шагов
-3️⃣ Приглашай друзей и получай 10% с их заработка
+📊 **Твоя статистика:**
+💰 Баланс: {balance:.2f} {TOKEN_NAME}
+💎 Всего заработано: {total_earned:.2f} {TOKEN_NAME}
+👥 Рефералов: {referrals}
+🏃 Шагов сегодня: {steps_today}
 
-💰 **Твой текущий баланс:** 5 {TOKEN_NAME} (стартовый бонус)
-👥 **Рефералов:** 0
+🎁 **Бонус:** +{START_BONUS} {TOKEN_NAME} за регистрацию!
 
-🎁 **Бонус за старт:** +5 {TOKEN_NAME} за регистрацию!
+**Как начать?**
+1. Нажми "🏃 Шагомер"
+2. Добавь шаги
+3. Получай токены!
 """
 
     keyboard = [
         [InlineKeyboardButton("🏃 Шагомер", callback_data="steps")],
         [InlineKeyboardButton("📊 Мой профиль", callback_data="profile")],
-        [InlineKeyboardButton("👥 Реферальная система", callback_data="referrals")],
+        [InlineKeyboardButton("👥 Рефералы", callback_data="referrals")],
         [InlineKeyboardButton("🏆 Топ игроков", callback_data="leaderboard")],
-        [InlineKeyboardButton("📖 Как заработать?", callback_data="howto")]
+        [InlineKeyboardButton("📖 Помощь", callback_data="help")]
     ]
-    
-    reply_markup = InlineKeyboardMarkup(keyboard)
     
     await update.message.reply_text(
         welcome_text,
         parse_mode='Markdown',
-        reply_markup=reply_markup
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
+# --- ШАГОМЕР ---
+
 async def show_steps(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать и добавить шаги"""
+    """Показать раздел шагомера"""
     query = update.callback_query
     await query.answer()
     
     user_id = query.from_user.id
-    user = db.get_user(user_id)
+    user_data = db.get_user(user_id)
     
-    if not user:
-        await query.edit_message_text("❌ Ошибка! Попробуйте /start")
+    if not user_data:
+        await query.edit_message_text("❌ Ошибка! Нажмите /start")
         return
     
-    steps_today = user[7] or 0
-    balance = user[3] or 0
+    steps_today = user_data[7] or 0
+    balance = user_data[3] or 0
+    remaining = MAX_DAILY_STEPS - steps_today
     
-    steps_text = f"""
+    text = f"""
 🏃 **Шагомер**
 
-📊 Сегодня пройдено: {steps_today} шагов
-🎯 До лимита (10000): {MAX_DAILY_STEPS - steps_today} шагов
-
-💰 Заработано за сегодня: {steps_today * STEPS_TO_TOKENS_RATE:.2f} {TOKEN_NAME}
-💰 Твой баланс: {balance:.2f} {TOKEN_NAME}
+📊 Сегодня пройдено: **{steps_today}** шагов
+🎯 Осталось до лимита: **{remaining}** шагов
+💰 Заработано сегодня: **{steps_today * STEPS_TO_TOKENS:.2f}** {TOKEN_NAME}
+💰 Твой баланс: **{balance:.2f}** {TOKEN_NAME}
 
 **Как добавить шаги:**
-1. Нажмите кнопку "Добавить шаги"
-2. Введите количество шагов (от 100 до 5000)
-3. Получите токены!
+1. Нажми "➕ Добавить шаги"
+2. Напиши число (100-5000)
+3. Получи токены!
+
+📌 **Лимит:** {MAX_DAILY_STEPS} шагов в день
 """
 
     keyboard = [
         [InlineKeyboardButton("➕ Добавить шаги", callback_data="add_steps")],
-        [InlineKeyboardButton("🔄 Сбросить шаги (тест)", callback_data="reset_steps")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="back_to_menu")]
+        [InlineKeyboardButton("🔄 Сбросить шаги", callback_data="reset_steps")],
+        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
     ]
     
     await query.edit_message_text(
-        steps_text,
+        text,
         parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
@@ -298,9 +445,9 @@ async def add_steps_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
     await query.edit_message_text(
         "📱 **Введите количество шагов**\n\n"
-        "Минимум: 100 шагов\n"
-        "Максимум: 5000 шагов за раз\n\n"
-        "Просто напишите число в чат!",
+        "Минимум: **100** шагов\n"
+        "Максимум: **5000** шагов за раз\n\n"
+        "💡 Просто напишите число в чат!",
         parse_mode='Markdown'
     )
     
@@ -312,40 +459,64 @@ async def handle_steps_input(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
     
     try:
-        steps = int(update.message.text)
+        steps = int(update.message.text.strip())
         
         if steps < 100:
-            await update.message.reply_text("❌ Минимум 100 шагов! Попробуйте еще раз.")
+            await update.message.reply_text("❌ Минимум **100** шагов! Попробуйте еще раз.", parse_mode='Markdown')
             return
         
         if steps > 5000:
-            await update.message.reply_text("❌ Максимум 5000 шагов за раз! Попробуйте еще раз.")
+            await update.message.reply_text("❌ Максимум **5000** шагов за раз! Попробуйте еще раз.", parse_mode='Markdown')
             return
         
         user_id = update.effective_user.id
         earned = db.update_steps(user_id, steps)
         
         if earned > 0:
-            user = db.get_user(user_id)
+            user_data = db.get_user(user_id)
             await update.message.reply_text(
                 f"✅ **Отлично!**\n\n"
-                f"🏃 Добавлено: {steps} шагов\n"
-                f"💰 Заработано: {earned:.2f} {TOKEN_NAME}\n"
-                f"📊 Текущий баланс: {user[3]:.2f} {TOKEN_NAME}",
+                f"🏃 Добавлено: **{steps}** шагов\n"
+                f"💰 Заработано: **{earned:.2f}** {TOKEN_NAME}\n"
+                f"📊 Новый баланс: **{user_data[3]:.2f}** {TOKEN_NAME}",
                 parse_mode='Markdown'
             )
         else:
+            user_data = db.get_user(user_id)
+            steps_today = user_data[7] or 0
             await update.message.reply_text(
-                "⚠️ **Шаги не добавлены**\n\n"
-                "Возможно, вы достигли дневного лимита (10000 шагов) или шаги уже были добавлены сегодня.",
+                f"⚠️ **Шаги не добавлены**\n\n"
+                f"📊 Шагов сегодня: {steps_today}/{MAX_DAILY_STEPS}\n"
+                f"💡 Дневной лимит достигнут или шаги уже добавлены.",
                 parse_mode='Markdown'
             )
         
         context.user_data['waiting_for_steps'] = False
         
     except ValueError:
-        await update.message.reply_text("❌ Пожалуйста, введите число!")
+        await update.message.reply_text("❌ Пожалуйста, введите **число**!", parse_mode='Markdown')
         context.user_data['waiting_for_steps'] = False
+
+async def reset_steps(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Сброс шагов (только для теста)"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = query.from_user.id
+    
+    # Проверяем, не админ ли это
+    if user_id != ADMIN_ID:
+        await query.edit_message_text("❌ Эта функция только для администратора!")
+        return
+    
+    db.cursor.execute(
+        "UPDATE users SET steps_today = 0, last_step_update = NULL",
+    )
+    db.conn.commit()
+    
+    await query.edit_message_text("✅ Шаги сброшены у всех пользователей!")
+
+# --- ПРОФИЛЬ ---
 
 async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показать профиль пользователя"""
@@ -353,34 +524,51 @@ async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     user_id = query.from_user.id
-    stats = db.get_user_stats(user_id)
-    user = db.get_user(user_id)
+    user_data = db.get_user(user_id)
     
-    if not stats:
-        await query.edit_message_text("❌ Ошибка! Попробуйте /start")
+    if not user_data:
+        await query.edit_message_text("❌ Ошибка! Нажмите /start")
         return
     
-    profile_text = f"""
+    referrals = db.get_referrals_count(user_id)
+    transactions = db.get_transactions(user_id, 5)
+    
+    text = f"""
 👤 **Профиль**
 
-👋 Имя: {query.from_user.first_name}
-🆔 ID: {user_id}
-💰 Баланс: {stats['balance']:.2f} {TOKEN_NAME}
-💎 Всего заработано: {stats['total_earned']:.2f} {TOKEN_NAME}
-👥 Рефералов: {stats['referrals']}
-🏃 Шагов сегодня: {stats['steps_today']}
-🎯 До лимита: {MAX_DAILY_STEPS - stats['steps_today']} шагов
-"""
+🆔 ID: `{user_id}`
+👤 Имя: {user_data[2] or "Не указано"}
+👥 Рефералов: {referrals}
+📅 Дата регистрации: {user_data[6][:10] if user_data[6] else "Неизвестно"}
 
+💰 **Финансы:**
+• Баланс: **{user_data[3]:.2f}** {TOKEN_NAME}
+• Всего заработано: **{user_data[4]:.2f}** {TOKEN_NAME}
+
+🏃 **Активность:**
+• Шагов сегодня: **{user_data[7] or 0}** / {MAX_DAILY_STEPS}
+
+📋 **Последние транзакции:**
+"""
+    
+    if transactions:
+        for amount, ttype, desc, date in transactions[:3]:
+            emoji = "💰" if amount > 0 else "💸"
+            text += f"\n{emoji} {desc}: **{amount:.2f}** {TOKEN_NAME}"
+    else:
+        text += "\n📭 Нет транзакций"
+    
     keyboard = [
-        [InlineKeyboardButton("🔙 Назад", callback_data="back_to_menu")]
+        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
     ]
     
     await query.edit_message_text(
-        profile_text,
+        text,
         parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
+
+# --- РЕФЕРАЛЫ ---
 
 async def show_referrals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показать реферальную систему"""
@@ -388,35 +576,64 @@ async def show_referrals(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     user_id = query.from_user.id
+    bot_username = context.bot.username
+    
+    ref_link = f"https://t.me/{bot_username}?start={user_id}"
     referrals_count = db.get_referrals_count(user_id)
+    referrals_list = db.get_referrals_list(user_id, 5)
     
-    ref_link = f"https://t.me/{context.bot.username}?start={user_id}"
-    
-    referral_text = f"""
+    text = f"""
 👥 **Реферальная система**
 
-Твоя реферальная ссылка:
+📋 **Твоя ссылка:**
 `{ref_link}`
 
-📊 Статистика:
-• Приглашено друзей: {referrals_count}
-• Бонус: 10% от заработка каждого реферала
+📊 **Статистика:**
+• Приглашено друзей: **{referrals_count}**
+• Бонус: **{int(REFERRAL_PERCENT * 100)}%** от их заработка
 
 🎁 **Бонусы:**
-• За каждого приглашенного друга: +1 {TOKEN_NAME}
-• 10% от всех его заработков
-"""
+• +1 {TOKEN_NAME} за каждого приглашенного
+• {int(REFERRAL_PERCENT * 100)}% с заработка рефералов
 
+👥 **Твои рефералы:**
+"""
+    
+    if referrals_list:
+        for ref_id, name, earned in referrals_list:
+            text += f"\n• {name}: заработал {earned:.2f} {TOKEN_NAME}"
+    else:
+        text += "\n📭 Пока нет рефералов"
+    
     keyboard = [
         [InlineKeyboardButton("📋 Скопировать ссылку", callback_data="copy_ref")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="back_to_menu")]
+        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
     ]
     
     await query.edit_message_text(
-        referral_text,
+        text,
         parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
+
+async def copy_referral(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показать ссылку для копирования"""
+    query = update.callback_query
+    await query.answer()
+    
+    user_id = query.from_user.id
+    bot_username = context.bot.username
+    ref_link = f"https://t.me/{bot_username}?start={user_id}"
+    
+    await query.edit_message_text(
+        f"📋 **Твоя реферальная ссылка:**\n\n"
+        f"`{ref_link}`\n\n"
+        "💡 Нажми на ссылку, чтобы выделить и скопировать\n"
+        "📤 Отправь её друзьям и получай бонусы!",
+        parse_mode='Markdown'
+    )
+
+# --- ТАБЛИЦА ЛИДЕРОВ ---
 
 async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Показать таблицу лидеров"""
@@ -426,101 +643,107 @@ async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     leaders = db.get_leaderboard(10)
     
     if not leaders:
-        await query.edit_message_text("🏆 Пока нет участников! Приглашай друзей и становись первым!")
+        await query.edit_message_text("🏆 Пока нет участников! Стань первым!")
         return
     
-    leaderboard_text = "🏆 **ТАБЛИЦА ЛИДЕРОВ** 🏆\n\n"
+    text = "🏆 **ТАБЛИЦА ЛИДЕРОВ** 🏆\n\n"
     
-    for i, (user_id, first_name, balance) in enumerate(leaders, 1):
-        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
-        leaderboard_text += f"{medal} {first_name}: {balance:.2f} {TOKEN_NAME}\n"
+    medals = ["🥇", "🥈", "🥉"]
+    for i, (user_id, name, balance, total) in enumerate(leaders, 1):
+        medal = medals[i-1] if i <= 3 else f"{i}."
+        text += f"{medal} **{name}**: {balance:.2f} {TOKEN_NAME}\n"
     
     keyboard = [
-        [InlineKeyboardButton("🔙 Назад", callback_data="back_to_menu")]
+        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
     ]
     
     await query.edit_message_text(
-        leaderboard_text,
+        text,
         parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-async def show_howto(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать инструкцию по заработку"""
+# --- ПОМОЩЬ ---
+
+async def show_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Показать помощь"""
     query = update.callback_query
     await query.answer()
     
-    howto_text = f"""
-📖 **Как зарабатывать {TOKEN_NAME}?**
+    text = f"""
+📖 **Помощь**
 
-🚶 **Способ 1: Ходьба**
+🏃 **Как зарабатывать?**
+
+1️⃣ **Шагомер**
 • Добавляй шаги через раздел "Шагомер"
-• 1 шаг = {STEPS_TO_TOKENS_RATE} {TOKEN_NAME}
-• Максимум {MAX_DAILY_STEPS} шагов в день
+• {STEPS_TO_TOKENS} {TOKEN_NAME} за каждый шаг
+• Лимит: {MAX_DAILY_STEPS} шагов в день
 
-👥 **Способ 2: Рефералы**
+2️⃣ **Рефералы**
 • Приглашай друзей по своей ссылке
-• Получай 10% от их заработка
-• За каждого друга +1 {TOKEN_NAME} бонус
+• {int(REFERRAL_PERCENT * 100)}% от их заработка
+• +1 {TOKEN_NAME} за каждого друга
 
-🎯 **Способ 3: Активность**
-• Выполняй ежедневные задания
-• Участвуй в соревнованиях
-• Зарабатывай бонусные токены
+3️⃣ **Ежедневный бонус**
+• Заходи каждый день
+• Получай бонусные токены
 
 💰 **Вывод средств:**
-• Минимальная сумма: 50 {TOKEN_NAME}
+• Минимум: 50 {TOKEN_NAME}
+• Вывод в криптовалюте
 • Комиссия: 5%
-• Вывод в TON/другие токены
-"""
 
+❓ **Вопросы?**
+Напишите @support_bot
+"""
+    
     keyboard = [
-        [InlineKeyboardButton("🔙 Назад", callback_data="back_to_menu")]
+        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
     ]
     
     await query.edit_message_text(
-        howto_text,
+        text,
         parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
-async def reset_steps_test(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Сбросить шаги (тестовая функция)"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    db.cursor.execute(
-        "UPDATE users SET steps_today = 0, last_step_update = NULL WHERE user_id = ?",
-        (user_id,)
-    )
-    db.conn.commit()
-    
-    await query.edit_message_text("✅ Шаги сброшены! Вы можете добавлять шаги снова.")
-    await show_steps(update, context)
-
-async def copy_referral(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Копирование реферальной ссылки"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    ref_link = f"https://t.me/{context.bot.username}?start={user_id}"
-    
-    await query.edit_message_text(
-        f"📋 **Твоя реферальная ссылка:**\n\n"
-        f"`{ref_link}`\n\n"
-        "Скопируй и отправь друзьям!\n\n"
-        "💡 Нажми на ссылку, чтобы скопировать (в Telegram можно выделить и скопировать).",
-        parse_mode='Markdown'
-    )
+# --- НАЗАД ---
 
 async def back_to_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Вернуться в главное меню"""
     query = update.callback_query
     await query.answer()
     
-    await start(update, context)
+    # Пересоздаем приветственное сообщение
+    user = update.effective_user
+    user_data = db.get_user(user.id)
+    balance = user_data[3] if user_data else 0
+    
+    text = f"""
+{TOKEN_EMOJI} **ГЛАВНОЕ МЕНЮ** {TOKEN_EMOJI}
+
+Привет, **{user.first_name}**!
+
+💰 Баланс: **{balance:.2f}** {TOKEN_NAME}
+🎯 Что хочешь сделать?
+"""
+
+    keyboard = [
+        [InlineKeyboardButton("🏃 Шагомер", callback_data="steps")],
+        [InlineKeyboardButton("📊 Мой профиль", callback_data="profile")],
+        [InlineKeyboardButton("👥 Рефералы", callback_data="referrals")],
+        [InlineKeyboardButton("🏆 Топ игроков", callback_data="leaderboard")],
+        [InlineKeyboardButton("📖 Помощь", callback_data="help")]
+    ]
+    
+    await query.edit_message_text(
+        text,
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+# --- ОБРАБОТКА СООБЩЕНИЙ ---
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработка обычных сообщений"""
@@ -528,65 +751,107 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await handle_steps_input(update, context)
     else:
         await update.message.reply_text(
-            "🤔 Используйте кнопки меню или нажмите /start для начала.",
+            "🤔 Используйте кнопки меню",
             reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="back_to_menu")]
+                [InlineKeyboardButton("🏠 Главное меню", callback_data="back")]
             ])
         )
 
+# --- АДМИН-КОМАНДЫ ---
+
 async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Команда статистики (для администратора)"""
+    """Команда статистики (только для админа)"""
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text("❌ Нет прав доступа!")
         return
     
-    db.cursor.execute("SELECT COUNT(*) FROM users")
-    total_users = db.cursor.fetchone()[0]
+    total_users = db.get_total_users()
+    total_balance = db.get_total_balance()
+    total_earned = db.get_total_earned()
     
-    db.cursor.execute("SELECT SUM(balance) FROM users")
-    total_balance = db.cursor.fetchone()[0] or 0
-    
-    db.cursor.execute("SELECT SUM(total_earned) FROM users")
-    total_earned = db.cursor.fetchone()[0] or 0
-    
-    stats_text = f"""
-📊 **Статистика бота**
+    text = f"""
+📊 **СТАТИСТИКА БОТА**
 
-👥 Всего пользователей: {total_users}
-💰 Общий баланс: {total_balance:.2f} {TOKEN_NAME}
-💎 Всего заработано: {total_earned:.2f} {TOKEN_NAME}
+👥 Всего пользователей: **{total_users}**
+💰 Общий баланс: **{total_balance:.2f}** {TOKEN_NAME}
+💎 Всего заработано: **{total_earned:.2f}** {TOKEN_NAME}
+
+💡 Команды админа:
+• /reset_steps - сброс шагов
+• /clear_db - очистка БД (осторожно!)
 """
+    
+    await update.message.reply_text(text, parse_mode='Markdown')
 
-    await update.message.reply_text(stats_text, parse_mode='Markdown')
+async def reset_all_steps(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Сброс шагов (только админ)"""
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("❌ Нет прав!")
+        return
+    
+    db.reset_daily_steps()
+    await update.message.reply_text("✅ Шаги сброшены!")
 
-# ===================== ЗАПУСК =====================
+# ============================================================
+# ===================== ЗАПУСК ===============================
+# ============================================================
 
 def main():
-    # Создаем приложение
-    application = Application.builder().token(BOT_TOKEN).build()
+    """Главная функция запуска бота"""
+    print("""
+    ╔═══════════════════════════════════════════╗
+    ║   🚀 MOVE-TO-EARN TELEGRAM BOT           ║
+    ║   Версия: 1.0                            ║
+    ║   Автор: Ваш спортивный эксперт           ║
+    ╚═══════════════════════════════════════════╝
+    """)
     
-    # Регистрируем обработчики команд
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("stats", stats_command))
+    # Проверка токена
+    if BOT_TOKEN == "ВАШ_ТОКЕН_ОТ_BOTFATHER":
+        print("❌ ОШИБКА: Не вставлен токен бота!")
+        print("📝 Откройте файл bot.py и замените BOT_TOKEN на ваш токен")
+        print("🤖 Получите токен у @BotFather в Telegram")
+        return
     
-    # Регистрируем обработчики callback-запросов
-    application.add_handler(CallbackQueryHandler(show_steps, pattern="^steps$"))
-    application.add_handler(CallbackQueryHandler(add_steps_prompt, pattern="^add_steps$"))
-    application.add_handler(CallbackQueryHandler(reset_steps_test, pattern="^reset_steps$"))
-    application.add_handler(CallbackQueryHandler(show_profile, pattern="^profile$"))
-    application.add_handler(CallbackQueryHandler(show_referrals, pattern="^referrals$"))
-    application.add_handler(CallbackQueryHandler(show_leaderboard, pattern="^leaderboard$"))
-    application.add_handler(CallbackQueryHandler(show_howto, pattern="^howto$"))
-    application.add_handler(CallbackQueryHandler(copy_referral, pattern="^copy_ref$"))
-    application.add_handler(CallbackQueryHandler(back_to_menu, pattern="^back_to_menu$"))
-    
-    # Обработчик сообщений
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    
-    # Запускаем бота
-    print("🚀 Бот запущен! Нажми /start в Telegram.")
-    print("📊 Для статистики используй /stats (только админ)")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    try:
+        # Создаем приложение
+        application = Application.builder().token(BOT_TOKEN).build()
+        
+        # Команды
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CommandHandler("stats", stats_command))
+        application.add_handler(CommandHandler("reset_steps", reset_all_steps))
+        
+        # Callback-запросы
+        application.add_handler(CallbackQueryHandler(show_steps, pattern="^steps$"))
+        application.add_handler(CallbackQueryHandler(add_steps_prompt, pattern="^add_steps$"))
+        application.add_handler(CallbackQueryHandler(reset_steps, pattern="^reset_steps$"))
+        application.add_handler(CallbackQueryHandler(show_profile, pattern="^profile$"))
+        application.add_handler(CallbackQueryHandler(show_referrals, pattern="^referrals$"))
+        application.add_handler(CallbackQueryHandler(show_leaderboard, pattern="^leaderboard$"))
+        application.add_handler(CallbackQueryHandler(show_help, pattern="^help$"))
+        application.add_handler(CallbackQueryHandler(copy_referral, pattern="^copy_ref$"))
+        application.add_handler(CallbackQueryHandler(back_to_menu, pattern="^back$"))
+        
+        # Сообщения
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+        
+        # Запуск
+        print("✅ Бот успешно запущен!")
+        print("📱 Найдите бота в Telegram и напишите /start")
+        print("🛑 Для остановки нажмите Ctrl+C")
+        print("=" * 50)
+        
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
+        
+    except Exception as e:
+        print(f"❌ Ошибка при запуске: {e}")
+        print("\nВозможные решения:")
+        print("1. Проверьте интернет-соединение")
+        print("2. Проверьте правильность токена")
+        print("3. Установите библиотеку: pip install python-telegram-bot")
+    finally:
+        db.close()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
