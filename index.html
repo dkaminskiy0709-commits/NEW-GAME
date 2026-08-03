@@ -1,857 +1,829 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-🤖 MOVE-TO-EARN TELEGRAM БОТ
-Версия: 1.0
-Полный скрипт для заработка токенов за шаги
-"""
-
-import logging
-import sqlite3
-import datetime
-import json
-import os
-import sys
-from typing import Optional, Dict, Any, Tuple, List
-
-# ===================== ИМПОРТЫ TELEGRAM =====================
-try:
-    from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-    from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
-except ImportError:
-    print("❌ Ошибка: Не установлена библиотека python-telegram-bot")
-    print("📦 Установите: pip install python-telegram-bot")
-    sys.exit(1)
-
-# ============================================================
-# ===================== НАСТРОЙКИ ============================
-# ============================================================
-
-# 🔑 ТОКЕН БОТА - ПОЛУЧИТЕ У @BotFather
-BOT_TOKEN = "ВАШ_ТОКЕН_ОТ_BOTFATHER"  # ЗАМЕНИТЕ НА СВОЙ!
-
-# 🆔 ID АДМИНИСТРАТОРА - УЗНАЙТЕ У @userinfobot
-ADMIN_ID = 123456789  # ЗАМЕНИТЕ НА СВОЙ!
-
-# 📊 НАСТРОЙКИ ВАЛЮТЫ
-TOKEN_NAME = "$ACTI"
-TOKEN_EMOJI = "🎯"
-STEPS_TO_TOKENS = 0.01  # 1 шаг = 0.01 токена
-MAX_DAILY_STEPS = 10000  # Максимум шагов в день
-REFERRAL_PERCENT = 0.10  # 10% от заработка реферала
-START_BONUS = 5.0  # Стартовый бонус в токенах
-
-# ============================================================
-# ===================== БАЗА ДАННЫХ ==========================
-# ============================================================
-
-class Database:
-    """Класс для работы с SQLite базой данных"""
-    
-    def __init__(self, db_file: str = "data.db"):
-        self.db_file = db_file
-        self.conn = None
-        self.cursor = None
-        self.init_db()
-    
-    def init_db(self):
-        """Инициализация базы данных и создание таблиц"""
-        try:
-            self.conn = sqlite3.connect(self.db_file, check_same_thread=False)
-            self.cursor = self.conn.cursor()
-            self.create_tables()
-            print("✅ База данных подключена успешно")
-        except Exception as e:
-            print(f"❌ Ошибка подключения к БД: {e}")
-            sys.exit(1)
-    
-    def create_tables(self):
-        """Создание всех необходимых таблиц"""
-        # Таблица пользователей
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                user_id INTEGER PRIMARY KEY,
-                username TEXT,
-                first_name TEXT,
-                last_name TEXT,
-                balance REAL DEFAULT 0,
-                total_earned REAL DEFAULT 0,
-                referrer_id INTEGER DEFAULT 0,
-                joined_date TEXT,
-                steps_today INTEGER DEFAULT 0,
-                last_step_update TEXT,
-                daily_bonus_taken INTEGER DEFAULT 0
-            )
-        ''')
-        
-        # Таблица транзакций
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                amount REAL,
-                type TEXT,
-                description TEXT,
-                date TEXT
-            )
-        ''')
-        
-        # Таблица рефералов
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS referrals (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                referrer_id INTEGER,
-                referred_id INTEGER,
-                earned_amount REAL DEFAULT 0,
-                date TEXT
-            )
-        ''')
-        
-        # Таблица заданий
-        self.cursor.execute('''
-            CREATE TABLE IF NOT EXISTS tasks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT,
-                description TEXT,
-                reward REAL,
-                task_type TEXT,
-                is_active INTEGER DEFAULT 1
-            )
-        ''')
-        
-        self.conn.commit()
-        print("✅ Таблицы созданы/проверены")
-    
-    # --- РАБОТА С ПОЛЬЗОВАТЕЛЯМИ ---
-    
-    def register_user(self, user_id: int, username: str, first_name: str, last_name: str, referrer_id: int = 0) -> bool:
-        """Регистрация нового пользователя"""
-        try:
-            # Проверяем, существует ли пользователь
-            self.cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
-            if self.cursor.fetchone():
-                return True
-            
-            # Регистрируем пользователя
-            self.cursor.execute(
-                """INSERT INTO users 
-                   (user_id, username, first_name, last_name, referrer_id, joined_date) 
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (user_id, username, first_name, last_name, referrer_id, datetime.datetime.now().isoformat())
-            )
-            self.conn.commit()
-            
-            # Начисляем стартовый бонус
-            self.add_transaction(user_id, START_BONUS, "bonus", "Стартовый бонус")
-            self.cursor.execute(
-                "UPDATE users SET balance = balance + ?, total_earned = total_earned + ? WHERE user_id = ?",
-                (START_BONUS, START_BONUS, user_id)
-            )
-            self.conn.commit()
-            
-            # Начисляем бонус рефереру
-            if referrer_id > 0:
-                self.cursor.execute(
-                    "UPDATE users SET balance = balance + 1 WHERE user_id = ?",
-                    (referrer_id,)
-                )
-                self.conn.commit()
-                self.add_transaction(referrer_id, 1.0, "referral", f"Бонус за приглашение {first_name}")
-            
-            return True
-        except Exception as e:
-            print(f"❌ Ошибка регистрации: {e}")
-            return False
-    
-    def get_user(self, user_id: int) -> Optional[Tuple]:
-        """Получение данных пользователя"""
-        self.cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
-        return self.cursor.fetchone()
-    
-    def update_username(self, user_id: int, username: str):
-        """Обновление username пользователя"""
-        self.cursor.execute(
-            "UPDATE users SET username = ? WHERE user_id = ?",
-            (username, user_id)
-        )
-        self.conn.commit()
-    
-    # --- РАБОТА С ШАГАМИ ---
-    
-    def update_steps(self, user_id: int, steps: int) -> float:
-        """Обновление шагов и начисление токенов"""
-        user = self.get_user(user_id)
-        if not user:
-            return 0.0
-        
-        steps_today = user[7] or 0
-        last_update = user[8] or ""
-        
-        today = datetime.datetime.now().date()
-        
-        # Проверяем, был ли уже сегодня вход
-        if last_update:
-            last_date = datetime.datetime.fromisoformat(last_update).date()
-            if last_date == today:
-                new_steps = min(steps_today + steps, MAX_DAILY_STEPS)
-            else:
-                new_steps = min(steps, MAX_DAILY_STEPS)
-        else:
-            new_steps = min(steps, MAX_DAILY_STEPS)
-        
-        # Вычисляем заработанные токены
-        earned = (new_steps - steps_today) * STEPS_TO_TOKENS
-        
-        if earned > 0:
-            # Обновляем баланс
-            self.cursor.execute(
-                """UPDATE users 
-                   SET steps_today = ?, last_step_update = ?, 
-                       balance = balance + ?, total_earned = total_earned + ? 
-                   WHERE user_id = ?""",
-                (new_steps, datetime.datetime.now().isoformat(), earned, earned, user_id)
-            )
-            self.conn.commit()
-            
-            # Записываем транзакцию
-            self.add_transaction(user_id, earned, "steps", f"Шаги: {new_steps - steps_today}")
-            
-            # Начисляем бонус рефереру
-            if user[5] > 0:  # Если есть реферер
-                bonus = earned * REFERRAL_PERCENT
-                self.cursor.execute(
-                    "UPDATE users SET balance = balance + ? WHERE user_id = ?",
-                    (bonus, user[5])
-                )
-                self.conn.commit()
-                self.add_transaction(user[5], bonus, "referral_bonus", f"Бонус от реферала {user_id}")
-            
-            return earned
-        
-        return 0.0
-    
-    # --- ТРАНЗАКЦИИ ---
-    
-    def add_transaction(self, user_id: int, amount: float, trans_type: str, description: str):
-        """Добавление транзакции"""
-        self.cursor.execute(
-            """INSERT INTO transactions (user_id, amount, type, description, date) 
-               VALUES (?, ?, ?, ?, ?)""",
-            (user_id, amount, trans_type, description, datetime.datetime.now().isoformat())
-        )
-        self.conn.commit()
-    
-    def get_transactions(self, user_id: int, limit: int = 10) -> List[Tuple]:
-        """Получение последних транзакций пользователя"""
-        self.cursor.execute(
-            """SELECT amount, type, description, date FROM transactions 
-               WHERE user_id = ? ORDER BY date DESC LIMIT ?""",
-            (user_id, limit)
-        )
-        return self.cursor.fetchall()
-    
-    # --- РЕФЕРАЛЫ ---
-    
-    def get_referrals_count(self, user_id: int) -> int:
-        """Количество рефералов"""
-        self.cursor.execute("SELECT COUNT(*) FROM users WHERE referrer_id = ?", (user_id,))
-        return self.cursor.fetchone()[0]
-    
-    def get_referrals_list(self, user_id: int, limit: int = 10) -> List[Tuple]:
-        """Список рефералов"""
-        self.cursor.execute(
-            """SELECT user_id, first_name, total_earned FROM users 
-               WHERE referrer_id = ? ORDER BY total_earned DESC LIMIT ?""",
-            (user_id, limit)
-        )
-        return self.cursor.fetchall()
-    
-    # --- СТАТИСТИКА ---
-    
-    def get_leaderboard(self, limit: int = 10) -> List[Tuple]:
-        """Таблица лидеров"""
-        self.cursor.execute(
-            """SELECT user_id, first_name, balance, total_earned FROM users 
-               ORDER BY balance DESC LIMIT ?""",
-            (limit,)
-        )
-        return self.cursor.fetchall()
-    
-    def get_total_users(self) -> int:
-        """Общее количество пользователей"""
-        self.cursor.execute("SELECT COUNT(*) FROM users")
-        return self.cursor.fetchone()[0]
-    
-    def get_total_balance(self) -> float:
-        """Общий баланс всех пользователей"""
-        self.cursor.execute("SELECT SUM(balance) FROM users")
-        result = self.cursor.fetchone()[0]
-        return result if result else 0.0
-    
-    def get_total_earned(self) -> float:
-        """Общая сумма заработанного"""
-        self.cursor.execute("SELECT SUM(total_earned) FROM users")
-        result = self.cursor.fetchone()[0]
-        return result if result else 0.0
-    
-    # --- ДОПОЛНИТЕЛЬНО ---
-    
-    def reset_daily_steps(self):
-        """Сброс ежедневных шагов для всех пользователей"""
-        yesterday = (datetime.datetime.now() - datetime.timedelta(days=1)).date().isoformat()
-        self.cursor.execute(
-            "UPDATE users SET steps_today = 0 WHERE last_step_update < ?",
-            (yesterday,)
-        )
-        self.conn.commit()
-    
-    def close(self):
-        """Закрытие соединения с БД"""
-        if self.conn:
-            self.conn.close()
-
-# ============================================================
-# ===================== ОСНОВНОЙ БОТ ========================
-# ============================================================
-
-# Настройка логирования
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
-
-# Инициализация базы данных
-db = Database()
-
-# ============================================================
-# ===================== ОБРАБОТЧИКИ ==========================
-# ============================================================
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Приветственное сообщение с заставкой"""
-    user = update.effective_user
-    
-    # Проверяем реферальный параметр
-    referrer_id = None
-    if context.args and context.args[0].isdigit():
-        referrer_id = int(context.args[0])
-        if referrer_id == user.id:
-            referrer_id = 0
-    
-    # Регистрируем пользователя
-    db.register_user(
-        user.id,
-        user.username or "",
-        user.first_name or "Пользователь",
-        user.last_name or "",
-        referrer_id or 0
-    )
-    
-    # Получаем данные пользователя
-    user_data = db.get_user(user.id)
-    balance = user_data[3] if user_data else 0
-    total_earned = user_data[4] if user_data else 0
-    referrals = db.get_referrals_count(user.id)
-    steps_today = user_data[7] if user_data else 0
-    
-    # Текст приветствия
-    welcome_text = f"""
-{TOKEN_EMOJI} **ДОБРО ПОЖАЛОВАТЬ В MOVE-TO-EARN!** {TOKEN_EMOJI}
-
-Привет, **{user.first_name}**!
-
-Зарабатывай {TOKEN_NAME} просто за активность! 🏃
-
-📊 **Твоя статистика:**
-💰 Баланс: {balance:.2f} {TOKEN_NAME}
-💎 Всего заработано: {total_earned:.2f} {TOKEN_NAME}
-👥 Рефералов: {referrals}
-🏃 Шагов сегодня: {steps_today}
-
-🎁 **Бонус:** +{START_BONUS} {TOKEN_NAME} за регистрацию!
-
-**Как начать?**
-1. Нажми "🏃 Шагомер"
-2. Добавь шаги
-3. Получай токены!
-"""
-
-    keyboard = [
-        [InlineKeyboardButton("🏃 Шагомер", callback_data="steps")],
-        [InlineKeyboardButton("📊 Мой профиль", callback_data="profile")],
-        [InlineKeyboardButton("👥 Рефералы", callback_data="referrals")],
-        [InlineKeyboardButton("🏆 Топ игроков", callback_data="leaderboard")],
-        [InlineKeyboardButton("📖 Помощь", callback_data="help")]
-    ]
-    
-    await update.message.reply_text(
-        welcome_text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-# --- ШАГОМЕР ---
-
-async def show_steps(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать раздел шагомера"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    user_data = db.get_user(user_id)
-    
-    if not user_data:
-        await query.edit_message_text("❌ Ошибка! Нажмите /start")
-        return
-    
-    steps_today = user_data[7] or 0
-    balance = user_data[3] or 0
-    remaining = MAX_DAILY_STEPS - steps_today
-    
-    text = f"""
-🏃 **Шагомер**
-
-📊 Сегодня пройдено: **{steps_today}** шагов
-🎯 Осталось до лимита: **{remaining}** шагов
-💰 Заработано сегодня: **{steps_today * STEPS_TO_TOKENS:.2f}** {TOKEN_NAME}
-💰 Твой баланс: **{balance:.2f}** {TOKEN_NAME}
-
-**Как добавить шаги:**
-1. Нажми "➕ Добавить шаги"
-2. Напиши число (100-5000)
-3. Получи токены!
-
-📌 **Лимит:** {MAX_DAILY_STEPS} шагов в день
-"""
-
-    keyboard = [
-        [InlineKeyboardButton("➕ Добавить шаги", callback_data="add_steps")],
-        [InlineKeyboardButton("🔄 Сбросить шаги", callback_data="reset_steps")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
-    ]
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-async def add_steps_prompt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Запрос на ввод шагов"""
-    query = update.callback_query
-    await query.answer()
-    
-    await query.edit_message_text(
-        "📱 **Введите количество шагов**\n\n"
-        "Минимум: **100** шагов\n"
-        "Максимум: **5000** шагов за раз\n\n"
-        "💡 Просто напишите число в чат!",
-        parse_mode='Markdown'
-    )
-    
-    context.user_data['waiting_for_steps'] = True
-
-async def handle_steps_input(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка ввода шагов"""
-    if not context.user_data.get('waiting_for_steps'):
-        return
-    
-    try:
-        steps = int(update.message.text.strip())
-        
-        if steps < 100:
-            await update.message.reply_text("❌ Минимум **100** шагов! Попробуйте еще раз.", parse_mode='Markdown')
-            return
-        
-        if steps > 5000:
-            await update.message.reply_text("❌ Максимум **5000** шагов за раз! Попробуйте еще раз.", parse_mode='Markdown')
-            return
-        
-        user_id = update.effective_user.id
-        earned = db.update_steps(user_id, steps)
-        
-        if earned > 0:
-            user_data = db.get_user(user_id)
-            await update.message.reply_text(
-                f"✅ **Отлично!**\n\n"
-                f"🏃 Добавлено: **{steps}** шагов\n"
-                f"💰 Заработано: **{earned:.2f}** {TOKEN_NAME}\n"
-                f"📊 Новый баланс: **{user_data[3]:.2f}** {TOKEN_NAME}",
-                parse_mode='Markdown'
-            )
-        else:
-            user_data = db.get_user(user_id)
-            steps_today = user_data[7] or 0
-            await update.message.reply_text(
-                f"⚠️ **Шаги не добавлены**\n\n"
-                f"📊 Шагов сегодня: {steps_today}/{MAX_DAILY_STEPS}\n"
-                f"💡 Дневной лимит достигнут или шаги уже добавлены.",
-                parse_mode='Markdown'
-            )
-        
-        context.user_data['waiting_for_steps'] = False
-        
-    except ValueError:
-        await update.message.reply_text("❌ Пожалуйста, введите **число**!", parse_mode='Markdown')
-        context.user_data['waiting_for_steps'] = False
-
-async def reset_steps(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Сброс шагов (только для теста)"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    
-    # Проверяем, не админ ли это
-    if user_id != ADMIN_ID:
-        await query.edit_message_text("❌ Эта функция только для администратора!")
-        return
-    
-    db.cursor.execute(
-        "UPDATE users SET steps_today = 0, last_step_update = NULL",
-    )
-    db.conn.commit()
-    
-    await query.edit_message_text("✅ Шаги сброшены у всех пользователей!")
-
-# --- ПРОФИЛЬ ---
-
-async def show_profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать профиль пользователя"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    user_data = db.get_user(user_id)
-    
-    if not user_data:
-        await query.edit_message_text("❌ Ошибка! Нажмите /start")
-        return
-    
-    referrals = db.get_referrals_count(user_id)
-    transactions = db.get_transactions(user_id, 5)
-    
-    text = f"""
-👤 **Профиль**
-
-🆔 ID: `{user_id}`
-👤 Имя: {user_data[2] or "Не указано"}
-👥 Рефералов: {referrals}
-📅 Дата регистрации: {user_data[6][:10] if user_data[6] else "Неизвестно"}
-
-💰 **Финансы:**
-• Баланс: **{user_data[3]:.2f}** {TOKEN_NAME}
-• Всего заработано: **{user_data[4]:.2f}** {TOKEN_NAME}
-
-🏃 **Активность:**
-• Шагов сегодня: **{user_data[7] or 0}** / {MAX_DAILY_STEPS}
-
-📋 **Последние транзакции:**
-"""
-    
-    if transactions:
-        for amount, ttype, desc, date in transactions[:3]:
-            emoji = "💰" if amount > 0 else "💸"
-            text += f"\n{emoji} {desc}: **{amount:.2f}** {TOKEN_NAME}"
-    else:
-        text += "\n📭 Нет транзакций"
-    
-    keyboard = [
-        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
-    ]
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-# --- РЕФЕРАЛЫ ---
-
-async def show_referrals(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать реферальную систему"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    bot_username = context.bot.username
-    
-    ref_link = f"https://t.me/{bot_username}?start={user_id}"
-    referrals_count = db.get_referrals_count(user_id)
-    referrals_list = db.get_referrals_list(user_id, 5)
-    
-    text = f"""
-👥 **Реферальная система**
-
-📋 **Твоя ссылка:**
-`{ref_link}`
-
-📊 **Статистика:**
-• Приглашено друзей: **{referrals_count}**
-• Бонус: **{int(REFERRAL_PERCENT * 100)}%** от их заработка
-
-🎁 **Бонусы:**
-• +1 {TOKEN_NAME} за каждого приглашенного
-• {int(REFERRAL_PERCENT * 100)}% с заработка рефералов
-
-👥 **Твои рефералы:**
-"""
-    
-    if referrals_list:
-        for ref_id, name, earned in referrals_list:
-            text += f"\n• {name}: заработал {earned:.2f} {TOKEN_NAME}"
-    else:
-        text += "\n📭 Пока нет рефералов"
-    
-    keyboard = [
-        [InlineKeyboardButton("📋 Скопировать ссылку", callback_data="copy_ref")],
-        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
-    ]
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-async def copy_referral(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать ссылку для копирования"""
-    query = update.callback_query
-    await query.answer()
-    
-    user_id = query.from_user.id
-    bot_username = context.bot.username
-    ref_link = f"https://t.me/{bot_username}?start={user_id}"
-    
-    await query.edit_message_text(
-        f"📋 **Твоя реферальная ссылка:**\n\n"
-        f"`{ref_link}`\n\n"
-        "💡 Нажми на ссылку, чтобы выделить и скопировать\n"
-        "📤 Отправь её друзьям и получай бонусы!",
-        parse_mode='Markdown'
-    )
-
-# --- ТАБЛИЦА ЛИДЕРОВ ---
-
-async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать таблицу лидеров"""
-    query = update.callback_query
-    await query.answer()
-    
-    leaders = db.get_leaderboard(10)
-    
-    if not leaders:
-        await query.edit_message_text("🏆 Пока нет участников! Стань первым!")
-        return
-    
-    text = "🏆 **ТАБЛИЦА ЛИДЕРОВ** 🏆\n\n"
-    
-    medals = ["🥇", "🥈", "🥉"]
-    for i, (user_id, name, balance, total) in enumerate(leaders, 1):
-        medal = medals[i-1] if i <= 3 else f"{i}."
-        text += f"{medal} **{name}**: {balance:.2f} {TOKEN_NAME}\n"
-    
-    keyboard = [
-        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
-    ]
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-# --- ПОМОЩЬ ---
-
-async def show_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Показать помощь"""
-    query = update.callback_query
-    await query.answer()
-    
-    text = f"""
-📖 **Помощь**
-
-🏃 **Как зарабатывать?**
-
-1️⃣ **Шагомер**
-• Добавляй шаги через раздел "Шагомер"
-• {STEPS_TO_TOKENS} {TOKEN_NAME} за каждый шаг
-• Лимит: {MAX_DAILY_STEPS} шагов в день
-
-2️⃣ **Рефералы**
-• Приглашай друзей по своей ссылке
-• {int(REFERRAL_PERCENT * 100)}% от их заработка
-• +1 {TOKEN_NAME} за каждого друга
-
-3️⃣ **Ежедневный бонус**
-• Заходи каждый день
-• Получай бонусные токены
-
-💰 **Вывод средств:**
-• Минимум: 50 {TOKEN_NAME}
-• Вывод в криптовалюте
-• Комиссия: 5%
-
-❓ **Вопросы?**
-Напишите @support_bot
-"""
-    
-    keyboard = [
-        [InlineKeyboardButton("🔙 Назад", callback_data="back")]
-    ]
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-# --- НАЗАД ---
-
-async def back_to_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Вернуться в главное меню"""
-    query = update.callback_query
-    await query.answer()
-    
-    # Пересоздаем приветственное сообщение
-    user = update.effective_user
-    user_data = db.get_user(user.id)
-    balance = user_data[3] if user_data else 0
-    
-    text = f"""
-{TOKEN_EMOJI} **ГЛАВНОЕ МЕНЮ** {TOKEN_EMOJI}
-
-Привет, **{user.first_name}**!
-
-💰 Баланс: **{balance:.2f}** {TOKEN_NAME}
-🎯 Что хочешь сделать?
-"""
-
-    keyboard = [
-        [InlineKeyboardButton("🏃 Шагомер", callback_data="steps")],
-        [InlineKeyboardButton("📊 Мой профиль", callback_data="profile")],
-        [InlineKeyboardButton("👥 Рефералы", callback_data="referrals")],
-        [InlineKeyboardButton("🏆 Топ игроков", callback_data="leaderboard")],
-        [InlineKeyboardButton("📖 Помощь", callback_data="help")]
-    ]
-    
-    await query.edit_message_text(
-        text,
-        parse_mode='Markdown',
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
-
-# --- ОБРАБОТКА СООБЩЕНИЙ ---
-
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработка обычных сообщений"""
-    if context.user_data.get('waiting_for_steps'):
-        await handle_steps_input(update, context)
-    else:
-        await update.message.reply_text(
-            "🤔 Используйте кнопки меню",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🏠 Главное меню", callback_data="back")]
-            ])
-        )
-
-# --- АДМИН-КОМАНДЫ ---
-
-async def stats_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Команда статистики (только для админа)"""
-    if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ Нет прав доступа!")
-        return
-    
-    total_users = db.get_total_users()
-    total_balance = db.get_total_balance()
-    total_earned = db.get_total_earned()
-    
-    text = f"""
-📊 **СТАТИСТИКА БОТА**
-
-👥 Всего пользователей: **{total_users}**
-💰 Общий баланс: **{total_balance:.2f}** {TOKEN_NAME}
-💎 Всего заработано: **{total_earned:.2f}** {TOKEN_NAME}
-
-💡 Команды админа:
-• /reset_steps - сброс шагов
-• /clear_db - очистка БД (осторожно!)
-"""
-    
-    await update.message.reply_text(text, parse_mode='Markdown')
-
-async def reset_all_steps(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Сброс шагов (только админ)"""
-    if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text("❌ Нет прав!")
-        return
-    
-    db.reset_daily_steps()
-    await update.message.reply_text("✅ Шаги сброшены!")
-
-# ============================================================
-# ===================== ЗАПУСК ===============================
-# ============================================================
-
-def main():
-    """Главная функция запуска бота"""
-    print("""
-    ╔═══════════════════════════════════════════╗
-    ║   🚀 MOVE-TO-EARN TELEGRAM BOT           ║
-    ║   Версия: 1.0                            ║
-    ║   Автор: Ваш спортивный эксперт           ║
-    ╚═══════════════════════════════════════════╝
-    """)
-    
-    # Проверка токена
-    if BOT_TOKEN == "ВАШ_ТОКЕН_ОТ_BOTFATHER":
-        print("❌ ОШИБКА: Не вставлен токен бота!")
-        print("📝 Откройте файл bot.py и замените BOT_TOKEN на ваш токен")
-        print("🤖 Получите токен у @BotFather в Telegram")
-        return
-    
-    try:
-        # Создаем приложение
-        application = Application.builder().token(BOT_TOKEN).build()
-        
-        # Команды
-        application.add_handler(CommandHandler("start", start))
-        application.add_handler(CommandHandler("stats", stats_command))
-        application.add_handler(CommandHandler("reset_steps", reset_all_steps))
-        
-        # Callback-запросы
-        application.add_handler(CallbackQueryHandler(show_steps, pattern="^steps$"))
-        application.add_handler(CallbackQueryHandler(add_steps_prompt, pattern="^add_steps$"))
-        application.add_handler(CallbackQueryHandler(reset_steps, pattern="^reset_steps$"))
-        application.add_handler(CallbackQueryHandler(show_profile, pattern="^profile$"))
-        application.add_handler(CallbackQueryHandler(show_referrals, pattern="^referrals$"))
-        application.add_handler(CallbackQueryHandler(show_leaderboard, pattern="^leaderboard$"))
-        application.add_handler(CallbackQueryHandler(show_help, pattern="^help$"))
-        application.add_handler(CallbackQueryHandler(copy_referral, pattern="^copy_ref$"))
-        application.add_handler(CallbackQueryHandler(back_to_menu, pattern="^back$"))
-        
-        # Сообщения
-        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-        
-        # Запуск
-        print("✅ Бот успешно запущен!")
-        print("📱 Найдите бота в Telegram и напишите /start")
-        print("🛑 Для остановки нажмите Ctrl+C")
-        print("=" * 50)
-        
-        application.run_polling(allowed_updates=Update.ALL_TYPES)
-        
-    except Exception as e:
-        print(f"❌ Ошибка при запуске: {e}")
-        print("\nВозможные решения:")
-        print("1. Проверьте интернет-соединение")
-        print("2. Проверьте правильность токена")
-        print("3. Установите библиотеку: pip install python-telegram-bot")
-    finally:
-        db.close()
-
-if __name__ == "__main__":
-    main()
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Neon Tapper</title>
+    <style>
+        /* ===== НЕОНОВЫЙ СТИЛЬ ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background: #0B0014;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: radial-gradient(circle at 50% 0%, #1a0033, #0B0014 80%);
+        }
+
+        #app {
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            max-height: 800px;
+            background: #0B0014;
+            border: 1px solid rgba(176, 38, 255, 0.2);
+            box-shadow: 0 0 60px rgba(176, 38, 255, 0.15);
+            border-radius: 32px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* ===== ВЕРХНЯЯ ПАНЕЛЬ ===== */
+        .top-panel {
+            padding: 20px 20px 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(176, 38, 255, 0.2);
+            flex-shrink: 0;
+        }
+
+        .level-badge {
+            background: rgba(176, 38, 255, 0.2);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 700;
+            color: #B026FF;
+            text-shadow: 0 0 20px rgba(176, 38, 255, 0.5);
+            border: 1px solid rgba(176, 38, 255, 0.3);
+        }
+
+        .coins-box {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 0, 229, 0.1);
+            padding: 6px 16px 6px 12px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 0, 229, 0.2);
+        }
+
+        .coin-icon {
+            font-size: 20px;
+            filter: drop-shadow(0 0 8px #FF00E5);
+        }
+
+        .coins-count {
+            font-weight: 900;
+            font-size: 18px;
+            color: #FF00E5;
+            text-shadow: 0 0 20px rgba(255, 0, 229, 0.4);
+        }
+
+        /* ===== ЦЕНТР - МОНСТР ===== */
+        .monster-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+            position: relative;
+            min-height: 200px;
+        }
+
+        .monster-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 280px;
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .monster-emoji {
+            font-size: 120px;
+            transition: all 0.1s ease;
+            filter: drop-shadow(0 0 40px rgba(176, 38, 255, 0.6));
+            line-height: 1;
+            animation: float 2s ease-in-out infinite;
+            cursor: pointer;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-12px) scale(1.03); }
+        }
+
+        .monster-emoji.hit {
+            animation: hitAnim 0.15s ease !important;
+        }
+
+        @keyframes hitAnim {
+            0% { transform: scale(0.7) rotate(-5deg); }
+            50% { transform: scale(1.2) rotate(3deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Полоска HP */
+        .hp-bar-bg {
+            width: 100%;
+            max-width: 280px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            margin-top: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(176, 38, 255, 0.2);
+        }
+
+        .hp-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #B026FF, #FF00E5);
+            border-radius: 20px;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.4);
+        }
+
+        .hp-text {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 6px;
+            letter-spacing: 2px;
+        }
+
+        /* ===== КНОПКА ТАПА (как в Hamster) ===== */
+        .tap-button-wrapper {
+            padding: 10px 20px 20px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .tap-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #B026FF, #5a009c);
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 60px rgba(176, 38, 255, 0.3), inset 0 -10px 30px rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 28px;
+            font-weight: 900;
+            font-family: 'Orbitron', monospace;
+            cursor: pointer;
+            transition: all 0.05s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            letter-spacing: 2px;
+            touch-action: manipulation;
+        }
+
+        .tap-btn:active {
+            transform: scale(0.92);
+            box-shadow: 0 0 80px rgba(176, 38, 255, 0.5);
+        }
+
+        .tap-btn .sub {
+            font-size: 12px;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        /* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 10px 18px;
+            background: rgba(11, 0, 20, 0.9);
+            border-top: 1px solid rgba(176, 38, 255, 0.15);
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 4px 12px;
+            border-radius: 12px;
+            background: transparent;
+            border: none;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .nav-item.active {
+            color: #B026FF;
+            text-shadow: 0 0 20px rgba(176, 38, 255, 0.3);
+        }
+
+        .nav-item .icon {
+            font-size: 24px;
+            filter: grayscale(0.3);
+        }
+
+        .nav-item.active .icon {
+            filter: grayscale(0);
+            text-shadow: 0 0 20px rgba(176, 38, 255, 0.5);
+        }
+
+        /* ===== ПАНЕЛИ (вкладки) ===== */
+        .panel {
+            display: none;
+            flex: 1;
+            padding: 10px 16px;
+            overflow-y: auto;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .panel.open {
+            display: flex;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            color: #B026FF;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(176, 38, 255, 0.2);
+            border-bottom: 1px solid rgba(176, 38, 255, 0.1);
+            padding-bottom: 8px;
+        }
+
+        /* Карточки улучшений */
+        .upgrade-card {
+            background: rgba(176, 38, 255, 0.05);
+            border: 1px solid rgba(176, 38, 255, 0.15);
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+
+        .upgrade-card .info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .upgrade-card .name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .upgrade-card .desc {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .upgrade-card .level {
+            font-size: 11px;
+            color: #FF00E5;
+        }
+
+        .buy-btn {
+            background: #B026FF;
+            border: none;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-family: 'Orbitron', monospace;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 0 20px rgba(176, 38, 255, 0.2);
+        }
+
+        .buy-btn:active {
+            transform: scale(0.95);
+        }
+
+        .buy-btn:disabled {
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        /* Достижения */
+        .achieve-item {
+            background: rgba(255, 0, 229, 0.03);
+            border-left: 3px solid #B026FF;
+            padding: 10px 14px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .achieve-item.done {
+            border-left-color: #FF00E5;
+            opacity: 0.6;
+        }
+
+        .achieve-item .title {
+            font-size: 12px;
+        }
+
+        .achieve-item .status {
+            font-size: 18px;
+        }
+
+        /* ===== СКРОЛЛ ===== */
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #B026FF;
+            border-radius: 10px;
+        }
+
+        /* ===== ВСПЛЫВАЮЩИЙ УРОН ===== */
+        .damage-float {
+            position: fixed;
+            font-weight: 900;
+            font-size: 28px;
+            color: #FF00E5;
+            text-shadow: 0 0 30px rgba(255, 0, 229, 0.8);
+            pointer-events: none;
+            animation: floatUp 0.9s ease-out forwards;
+            z-index: 999;
+            font-family: 'Orbitron', monospace;
+        }
+
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-120px) scale(1.6); }
+        }
+
+        /* адаптив */
+        @media (max-width: 420px) {
+            .monster-emoji { font-size: 80px; }
+            .tap-btn { width: 130px; height: 130px; font-size: 22px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- ВЕРХ -->
+    <div class="top-panel">
+        <div class="level-badge">🔥 УР. <span id="levelDisplay">1</span>/100</div>
+        <div class="coins-box">
+            <span class="coin-icon">💎</span>
+            <span class="coins-count" id="coinsDisplay">0</span>
+        </div>
+    </div>
+
+    <!-- ОСНОВНАЯ ИГРОВАЯ ОБЛАСТЬ (всегда видна) -->
+    <div id="gameArea" style="flex:1; display:flex; flex-direction:column;">
+        <div class="monster-area">
+            <div class="monster-wrapper">
+                <div class="monster-emoji" id="monsterEmoji">👾</div>
+            </div>
+            <div class="hp-bar-bg">
+                <div class="hp-bar-fill" id="hpFill" style="width:100%"></div>
+            </div>
+            <div class="hp-text" id="hpText">HP: 100 / 100</div>
+        </div>
+
+        <div class="tap-button-wrapper">
+            <button class="tap-btn" id="tapBtn">
+                💥
+                <span>ТАП</span>
+                <span class="sub">+<span id="damagePreview">1</span></span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ПАНЕЛИ (вкладки) -->
+    <div id="upgradePanel" class="panel">
+        <div class="panel-title">⚡ УЛУЧШЕНИЯ (20)</div>
+        <div id="upgradeList"></div>
+    </div>
+
+    <div id="achievePanel" class="panel">
+        <div class="panel-title">🏆 ДОСТИЖЕНИЯ (20)</div>
+        <div id="achieveList"></div>
+    </div>
+
+    <!-- НАВИГАЦИЯ -->
+    <div class="bottom-nav">
+        <button class="nav-item active" data-panel="game" id="navGame">🎯<span>БОЙ</span></button>
+        <button class="nav-item" data-panel="upgrade" id="navUpgrade">⬆️<span>АПГРЕЙД</span></button>
+        <button class="nav-item" data-panel="achieve" id="navAchieve">🏅<span>АЧИВКИ</span></button>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    //  ПОЛНЫЙ ИГРОВОЙ ДВИЖОК
+    // ============================================================
+
+    // ---- ДАННЫЕ ----
+    const MONSTERS = ['👾', '👹', '💀', '👻', '🤖', '👽', '☠️', '🧛', '🦇', '🐉'];
+    const UPGRADE_NAMES = [
+        { name: 'Неоновый кулак', desc: '+1 урон', baseCost: 10, costMulti: 1.5, maxLvl: 10, effect: (lvl) => lvl },
+        { name: 'Критический разряд', desc: 'шанс x2', baseCost: 25, costMulti: 1.6, maxLvl: 5, effect: (lvl) => lvl * 0.08 },
+        { name: 'Вампиризм', desc: '+монеты за тап', baseCost: 40, costMulti: 1.7, maxLvl: 3, effect: (lvl) => lvl },
+        { name: 'Саботаж', desc: 'монстр слабее %', baseCost: 60, costMulti: 1.8, maxLvl: 2, effect: (lvl) => lvl * 0.05 },
+    ];
+
+    const ACHIEVEMENTS = [
+        { id: 'a1', title: 'Первая кровь', check: s => s.totalKills >= 1 },
+        { id: 'a2', title: 'Охотник 10', check: s => s.totalKills >= 10 },
+        { id: 'a3', title: 'Охотник 100', check: s => s.totalKills >= 100 },
+        { id: 'a4', title: 'Охотник 500', check: s => s.totalKills >= 500 },
+        { id: 'a5', title: 'Пальцы-дрель', check: s => s.maxCombo >= 50 },
+        { id: 'a6', title: 'Тап-машина', check: s => s.totalTaps >= 1000 },
+        { id: 'a7', title: 'Тап-легенда', check: s => s.totalTaps >= 10000 },
+        { id: 'a8', title: 'Босс-киллер', check: s => s.bossKills >= 1 },
+        { id: 'a9', title: 'Электрошокер', check: s => s.bossKills >= 5 },
+        { id: 'a10', title: 'Миллионер', check: s => s.coins >= 10000 },
+        { id: 'a11', title: 'Убийца теней', check: s => s.totalKills >= 250 },
+        { id: 'a12', title: 'Неутомимый', check: s => s.totalTaps >= 500 },
+        { id: 'a13', title: 'Скорость неона', check: s => s.maxCombo >= 20 },
+        { id: 'a14', title: 'Демон-истребитель', check: s => s.totalKills >= 50 },
+        { id: 'a15', title: 'Фиолетовая чума', check: s => s.coins >= 5000 },
+        { id: 'a16', title: 'Мастер апгрейда', check: s => s.upgradeSum >= 10 },
+        { id: 'a17', title: 'Гранд-мастер', check: s => s.upgradeSum >= 20 },
+        { id: 'a18', title: 'Бессмертный', check: s => s.totalKills >= 1000 },
+        { id: 'a19', title: 'Король тапа', check: s => s.maxCombo >= 100 },
+        { id: 'a20', title: 'Легенда неона', check: s => s.totalKills >= 1500 },
+    ];
+
+    // ---- СОСТОЯНИЕ ----
+    let state = {
+        level: 1,
+        coins: 0,
+        maxHp: 100,
+        hp: 100,
+        monsterIdx: 0,
+        baseDamage: 1,
+
+        // улучшения
+        upgrades: [0,0,0,0], // текущие уровни
+
+        // статистика
+        totalKills: 0,
+        totalTaps: 0,
+        maxCombo: 0,
+        combo: 0,
+        bossKills: 0,
+        upgradeSum: 0,
+
+        // для ачивок
+        achieved: new Set(),
+    };
+
+    // ---- DOM ----
+    const $ = id => document.getElementById(id);
+    const monsterEmoji = $('monsterEmoji');
+    const hpFill = $('hpFill');
+    const hpText = $('hpText');
+    const levelDisplay = $('levelDisplay');
+    const coinsDisplay = $('coinsDisplay');
+    const damagePreview = $('damagePreview');
+    const tapBtn = $('tapBtn');
+
+    // ---- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----
+    function getMonster() {
+        return MONSTERS[state.monsterIdx % MONSTERS.length];
+    }
+
+    function getMaxHp() {
+        // Босс (каждый 10-й) имеет x5 HP
+        const base = 80 + state.level * 20;
+        if (state.level % 10 === 0) return base * 5;
+        // Саботаж: уменьшаем HP
+        const sabLvl = state.upgrades[3];
+        const reduce = 1 - (sabLvl * 0.05);
+        return Math.floor(base * reduce);
+    }
+
+    function getDamage() {
+        const lvl1 = state.upgrades[0]; // Неоновый кулак
+        let dmg = 1 + lvl1;
+        // крит
+        const critLvl = state.upgrades[1];
+        const critChance = critLvl * 0.08;
+        if (Math.random() < critChance) dmg *= 2;
+        return Math.floor(dmg);
+    }
+
+    function getCoinReward() {
+        const base = 1 + Math.floor(state.level / 5);
+        const vampLvl = state.upgrades[2];
+        return base + vampLvl;
+    }
+
+    function getUpgradeCost(idx) {
+        const lvl = state.upgrades[idx];
+        const data = UPGRADE_NAMES[idx];
+        return Math.floor(data.baseCost * Math.pow(data.costMulti, lvl));
+    }
+
+    // ---- ОСНОВНАЯ ЛОГИКА ----
+    function spawnMonster() {
+        state.maxHp = getMaxHp();
+        state.hp = state.maxHp;
+        monsterEmoji.textContent = getMonster();
+        // смена эмодзи при боссе
+        if (state.level % 10 === 0) {
+            monsterEmoji.textContent = '👾';
+            // можно добавить анимацию босса
+        }
+        updateUI();
+    }
+
+    function takeDamage() {
+        const dmg = getDamage();
+        state.hp -= dmg;
+        state.totalTaps++;
+        state.combo++;
+        if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+        // всплывающий урон
+        showDamageFloat(dmg);
+
+        // анимация удара
+        monsterEmoji.classList.remove('hit');
+        void monsterEmoji.offsetWidth;
+        monsterEmoji.classList.add('hit');
+
+        // вибрация (если в телеге - добавить)
+        if (navigator.vibrate) navigator.vibrate(10);
+
+        // вампиризм: монеты за тап
+        const vampLvl = state.upgrades[2];
+        if (vampLvl > 0) {
+            state.coins += vampLvl;
+        }
+
+        if (state.hp <= 0) {
+            killMonster();
+        }
+
+        updateUI();
+        checkAchievements();
+        saveGame();
+    }
+
+    function killMonster() {
+        const reward = getCoinReward();
+        state.coins += reward;
+        state.totalKills++;
+        if (state.level % 10 === 0) state.bossKills++;
+
+        state.level++;
+        state.combo = 0;
+
+        // сброс комбо при переходе
+
+        if (state.level > 100) {
+            state.level = 100;
+            // победа
+            alert('🏆 ТЫ ПРОШЕЛ ВСЕ 100 УРОВНЕЙ! Ты легенда!');
+            return;
+        }
+
+        spawnMonster();
+        updateUI();
+        checkAchievements();
+        saveGame();
+    }
+
+    function showDamageFloat(dmg) {
+        const el = document.createElement('div');
+        el.className = 'damage-float';
+        el.textContent = '-' + dmg;
+        const rect = tapBtn.getBoundingClientRect();
+        el.style.left = (rect.left + rect.width/2 - 30) + 'px';
+        el.style.top = (rect.top - 20) + 'px';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 900);
+    }
+
+    // ---- УЛУЧШЕНИЯ ----
+    function buyUpgrade(idx) {
+        const cost = getUpgradeCost(idx);
+        if (state.coins < cost) return;
+        if (state.upgrades[idx] >= UPGRADE_NAMES[idx].maxLvl) return;
+
+        state.coins -= cost;
+        state.upgrades[idx]++;
+        state.upgradeSum++;
+        spawnMonster(); // пересчет HP под саботаж
+        updateUI();
+        renderUpgrades();
+        checkAchievements();
+        saveGame();
+    }
+
+    // ---- UI ОБНОВЛЕНИЕ ----
+    function updateUI() {
+        const hpPercent = (state.hp / state.maxHp * 100);
+        hpFill.style.width = Math.max(0, hpPercent) + '%';
+        hpText.textContent = `HP: ${Math.max(0, Math.floor(state.hp))} / ${state.maxHp}`;
+        levelDisplay.textContent = state.level;
+        coinsDisplay.textContent = state.coins;
+        damagePreview.textContent = getDamage();
+    }
+
+    // ---- ОТРИСОВКА ПАНЕЛЕЙ ----
+    function renderUpgrades() {
+        const container = $('upgradeList');
+        container.innerHTML = '';
+        UPGRADE_NAMES.forEach((u, i) => {
+            const lvl = state.upgrades[i];
+            const cost = getUpgradeCost(i);
+            const maxed = lvl >= u.maxLvl;
+            const div = document.createElement('div');
+            div.className = 'upgrade-card';
+            div.innerHTML = `
+                <div class="info">
+                    <span class="name">${u.name}</span>
+                    <span class="desc">${u.desc} | Ур. ${lvl}/${u.maxLvl}</span>
+                </div>
+                <button class="buy-btn" ${maxed || state.coins < cost ? 'disabled' : ''}>
+                    ${maxed ? 'MAX' : cost + '💎'}
+                </button>
+            `;
+            div.querySelector('.buy-btn').addEventListener('click', () => buyUpgrade(i));
+            container.appendChild(div);
+        });
+    }
+
+    function renderAchievements() {
+        const container = $('achieveList');
+        container.innerHTML = '';
+        ACHIEVEMENTS.forEach((a) => {
+            const done = state.achieved.has(a.id);
+            const div = document.createElement('div');
+            div.className = `achieve-item ${done ? 'done' : ''}`;
+            div.innerHTML = `
+                <span class="title">${done ? '✅' : '⬜'} ${a.title}</span>
+                <span class="status">${done ? '🏆' : '🔒'}</span>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    // ---- ДОСТИЖЕНИЯ ----
+    function checkAchievements() {
+        let changed = false;
+        ACHIEVEMENTS.forEach(a => {
+            if (!state.achieved.has(a.id) && a.check(state)) {
+                state.achieved.add(a.id);
+                changed = true;
+                // бонус монет
+                state.coins += 50;
+                // уведомление
+                showFloatNotif('🏆 ' + a.title);
+            }
+        });
+        if (changed) {
+            updateUI();
+            renderAchievements();
+            saveGame();
+        }
+    }
+
+    function showFloatNotif(text) {
+        const el = document.createElement('div');
+        el.className = 'damage-float';
+        el.textContent = text;
+        el.style.color = '#FFD700';
+        el.style.fontSize = '20px';
+        el.style.left = '50%';
+        el.style.top = '40%';
+        el.style.transform = 'translateX(-50%)';
+        el.style.textShadow = '0 0 40px gold';
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1500);
+    }
+
+    // ---- НАВИГАЦИЯ ----
+    function switchPanel(panel) {
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('open'));
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+        if (panel === 'game') {
+            $('gameArea').style.display = 'flex';
+            document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+        } else {
+            $('gameArea').style.display = 'none';
+            const p = document.getElementById(panel + 'Panel');
+            if (p) {
+                p.style.display = 'flex';
+                p.classList.add('open');
+                if (panel === 'upgrade') renderUpgrades();
+                if (panel === 'achieve') renderAchievements();
+            }
+        }
+
+        document.querySelector(`.nav-item[data-panel="${panel}"]`)?.classList.add('active');
+    }
+
+    // ---- СОХРАНЕНИЕ ----
+    function saveGame() {
+        try {
+            const data = {
+                level: state.level,
+                coins: state.coins,
+                upgrades: state.upgrades,
+                totalKills: state.totalKills,
+                totalTaps: state.totalTaps,
+                maxCombo: state.maxCombo,
+                bossKills: state.bossKills,
+                upgradeSum: state.upgradeSum,
+                achieved: Array.from(state.achieved),
+            };
+            localStorage.setItem('neonTapper', JSON.stringify(data));
+        } catch(e) {}
+    }
+
+    function loadGame() {
+        try {
+            const raw = localStorage.getItem('neonTapper');
+            if (!raw) return;
+            const data = JSON.parse(raw);
+            state.level = data.level || 1;
+            state.coins = data.coins || 0;
+            state.upgrades = data.upgrades || [0,0,0,0];
+            state.totalKills = data.totalKills || 0;
+            state.totalTaps = data.totalTaps || 0;
+            state.maxCombo = data.maxCombo || 0;
+            state.bossKills = data.bossKills || 0;
+            state.upgradeSum = data.upgradeSum || 0;
+            if (data.achieved) data.achieved.forEach(id => state.achieved.add(id));
+        } catch(e) {}
+        spawnMonster();
+        updateUI();
+        renderUpgrades();
+        renderAchievements();
+    }
+
+    // ---- ИНИЦИАЛИЗАЦИЯ ----
+    document.addEventListener('DOMContentLoaded', () => {
+        loadGame();
+
+        // Тап
+        tapBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            takeDamage();
+        });
+        // Тап по монстру
+        monsterEmoji.addEventListener('click', (e) => {
+            e.preventDefault();
+            takeDamage();
+        });
+
+        // Навигация
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const panel = btn.dataset.panel;
+                switchPanel(panel);
+            });
+        });
+
+        // Клавиша пробел для тапа
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat) {
+                e.preventDefault();
+                takeDamage();
+            }
+        });
+
+        // Авто-сохранение каждые 10 сек
+        setInterval(saveGame, 10000);
+    });
+
+    // ---- ОБРАБОТКА СВЕРТЫВАНИЯ (для TG) ----
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') saveGame();
+    });
+</script>
+</body>
+</html>
